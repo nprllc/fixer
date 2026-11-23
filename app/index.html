@@ -1,6 +1,11 @@
 <meta charset="utf-8">
 <title>Le Fixer</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-512.png">
+<meta name="apple-mobile-web-app-title" content="Fixer">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0d0a14">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -143,7 +148,11 @@ nav button.sel{color:var(--pink)}
 
 /* Carte : poster officiel de Leonida (hébergé par Rockstar), navigation façon appli de cartes */
 #v-map{background:#06222c;overflow:hidden}
-#lmap{position:absolute;inset:0;background:#0b95b0}
+#lmap{position:absolute;inset:0;background:#01aac9}
+#lmap .leaflet-image-layer{-webkit-mask-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%202805%203840'%20preserveAspectRatio='none'%3E%3Cfilter%20id='b'%20x='-10%'%20y='-10%'%20width='120%'%20height='120%'%3E%3CfeGaussianBlur%20stdDeviation='34'/%3E%3C/filter%3E%3Cpolygon%20points='691,119%202684,119%202684,2957%201891,2957%201891,3715%20119,3715%20119,768%20691,768'%20fill='white'%20filter='url(%23b)'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%202805%203840'%20preserveAspectRatio='none'%3E%3Cfilter%20id='b'%20x='-10%'%20y='-10%'%20width='120%'%20height='120%'%3E%3CfeGaussianBlur%20stdDeviation='34'/%3E%3C/filter%3E%3Cpolygon%20points='691,119%202684,119%202684,2957%201891,2957%201891,3715%20119,3715%20119,768%20691,768'%20fill='white'%20filter='url(%23b)'/%3E%3C/svg%3E");-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
+.mk.home{--sz:38px;background:linear-gradient(135deg,#ff4fa3,#ffb14a);border:3px solid #fff;box-shadow:0 0 0 4px rgba(255,79,163,.35),0 6px 18px rgba(0,0,0,.5)}
+.mk.home svg{width:56%;height:56%}
+#lmap.z1 .mk.home{--sz:30px}
 #lmap.noimg{background:repeating-linear-gradient(0deg,transparent 0 79px,rgba(255,255,255,.06) 79px 80px),repeating-linear-gradient(90deg,transparent 0 79px,rgba(255,255,255,.06) 79px 80px),#0b4a5c}
 .leaflet-container{font:inherit;background:transparent;-webkit-tap-highlight-color:transparent}
 .leaflet-image-layer{image-rendering:auto}
@@ -271,7 +280,7 @@ nav button.sel{color:var(--pink)}
       <div id="mres" hidden></div>
       <div id="mquick"></div>
     </div>
-    <div class="mctl"><button type="button" id="mfit" aria-label="Voir toute la carte" title="Toute la carte"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+    <div class="mctl"><button type="button" id="mhome" aria-label="Ma planque" title="Ma planque"><svg viewBox="0 0 24 24"><path d="M3.5 11 12 4l8.5 7v9h-6v-6h-5v6h-6z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg></button><button type="button" id="mfit" aria-label="Voir toute la carte" title="Toute la carte"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
     <div class="mnote" id="mnote" hidden></div>
     <div class="msheet" id="mcard" hidden></div>
     <div class="msheet" id="mlayers" hidden></div>
@@ -546,7 +555,7 @@ function rules(){
   return `Tu es LE FIXER, le copilote de Nico pour GTA VI (PS5/Xbox, sorti le 19/11/2026). Il joue manette en main et te lit sur son téléphone.
 
 OÙ EN EST NICO
-Progression : ${ch}.
+Progression : ${ch}. Planque actuelle : ${homeFor().noHome ? "à Vice City, adresse inconnue" : homeFor().n}.
 ${progressText()}
 
 RÈGLES
@@ -737,6 +746,28 @@ const TYPES = {
 };
 const MONEY = ["cash","gang","banque","bijou","receleur"];
 const GROUPS = [["Argent", MONEY], ["Histoire et quêtes", ["quete","mission","rencontre"]], ["Exploration", ["secret","meditation","activite","lieu"]]];
+const HOMES = {
+  1:{n:"Maison de Jason", x:848, y:1686, d:"Ta planque du chapitre 1 à Key Lento. Perdue après Tourist Trap : vide le cash du plancher avant."},
+  2:{n:"Starlet Motel", x:494, y:712, d:"Ta planque du chapitre 2, en bordure est de Port Gellhorn (position approximative). Perdue pour de bon après Checking Out.", a:1},
+  3:{n:"Vice City", x:985, y:1045, d:"Au chapitre 3 tu bascules sur Vice City. Ta nouvelle planque n'est pas encore dans ma base : dis-moi où tu dors, je la note.", a:1, noHome:1}
+};
+const homeFor = () => { const c = +P.chap; return HOMES[c >= 3 ? 3 : c] || HOMES[1]; };
+let homeMarker = null;
+function placeHome(){
+  if(!lmap) return; const h = homeFor();
+  if(homeMarker){ homeMarker.remove(); homeMarker = null; }
+  if(h.noHome) return;
+  const icon = L.divIcon({className:"", iconSize:[38,38], iconAnchor:[19,19], html:`<div class="mk home" title="Ta planque"><svg viewBox="0 0 24 24"><path d="M3.5 11 12 4l8.5 7v9h-6v-6h-5v6h-6z" fill="#fff"/></svg></div>`});
+  homeMarker = L.marker([-h.y*S2, h.x*S2], {icon, zIndexOffset:2500, keyboard:false}).addTo(lmap);
+  homeMarker.on("click", e => { L.DomEvent.stopPropagation(e); select({id:"home", t:"lieu", n:h.n + " · ta planque", x:h.x*S2, y:h.y*S2, g:gridOf(h.x,h.y), k:"", d:h.d, a:h.a, home:1}); });
+}
+const S2 = 2805/1461;
+const gridOf = (x,y) => "ABCDEFGHIJKLM"[Math.max(0,Math.min(12,Math.round((y-107)/151.8)))] + (Math.max(0,Math.min(8,Math.floor((x-47)/151.8)))+1);
+function goHome(intro){
+  const h = homeFor(), c = [-h.y*S2, h.x*S2];
+  if(intro){ lmap.setView(c, fitZoom + 3.2, {animate:false}); setTimeout(() => lmap.flyTo(c, fitZoom + 1.6, {duration:1.6, easeLinearity:.2}), 450); }
+  else lmap.flyTo(c, fitZoom + 1.8, {duration:.8});
+}
 let pendingMap = null, hlIds = [], hlLayer = null, hlWaiting = null;
 let lmap = null, fitZoom = -3, selId = null, mapRevealed = new Set(), markers = new Map(), groups = {};
 let mOn = new Set(MONEY), hideDone = false, showLater = false;
@@ -833,7 +864,8 @@ function select(p, fly){
     <div class="phead"><span class="ib" style="--c:${lk?"#3a3148":t.c};${p.t==="lieu"?"color:#0d0a14":""}">${p.t==="lieu" ? '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" fill="currentColor"/></svg>' : svg(lk?"lock":p.t)}</span>
     <div style="min-width:0"><h3>${lk ? "Point du chapitre " + p.ch : esc(p.n)}</h3><div class="pmeta">${meta.join("<span>·</span>")}</div></div></div>`;
   let body;
-  if(p.t==="lieu") body = `<p>${p.k==="r" ? "Comté de Leonida." : p.k==="v" ? "Ville." : "Lieu indiqué sur la carte officielle."}</p>
+  if(p.home) body = `<p>${esc(p.d)}</p>`;
+  else if(p.t==="lieu") body = `<p>${p.k==="r" ? "Comté de Leonida." : p.k==="v" ? "Ville." : "Lieu indiqué sur la carte officielle."}</p>
     <div class="pacts"><button type="button" class="pri" data-mask="${p.id}">Demander au Fixer</button></div>`;
   else if(lk) body = `<p class="blur">Contenu masqué pour éviter le spoiler, révèle-le si tu veux.</p>
     <div class="pacts"><button type="button" data-mreveal="${p.id}">Afficher quand même</button></div>`;
@@ -873,20 +905,21 @@ function openMap(){
 function initMap(){
   const bounds = [[-MAP_H, 0], [0, MAP_W]];
   lmap = L.map("lmap", {crs:L.CRS.Simple, zoomSnap:0, zoomDelta:.75, wheelPxPerZoomLevel:110, wheelDebounceTime:20, inertiaDeceleration:2400, inertiaMaxSpeed:2200, easeLinearity:.25,
-    maxBounds:L.latLngBounds(bounds).pad(.1), maxBoundsViscosity:.9, zoomControl:false, attributionControl:true, bounceAtZoomLimits:false});
+    maxBounds:L.latLngBounds(bounds).pad(.8), maxBoundsViscosity:.6, zoomControl:false, attributionControl:true, bounceAtZoomLimits:false});
   lmap.attributionControl.setPrefix(false);
   const img = L.imageOverlay(MAP_IMG, bounds, {attribution:"Carte © Rockstar Games", decoding:"async"}).addTo(lmap);
   img.on("error", () => {
     $("#lmap").classList.add("noimg"); $("#mnote").hidden = false;
     $("#mnote").innerHTML = `La carte officielle ne peut pas s'afficher ici. Les points restent utilisables. Carte complète : <a href="https://nprllc.github.io/fixer/" target="_blank" rel="noopener">nprllc.github.io/fixer</a>`;
   });
-  const fit = () => { lmap.invalidateSize(); lmap.setMinZoom(-8); lmap.fitBounds(bounds, {animate:false}); fitZoom = lmap.getZoom(); lmap.setMinZoom(fitZoom - .3); lmap.setMaxZoom(.6); tier(); };
+  const fit = () => { lmap.invalidateSize(); lmap.setMinZoom(-8); lmap.fitBounds(bounds, {animate:false}); fitZoom = lmap.getZoom(); lmap.setMinZoom(fitZoom - .4); lmap.setMaxZoom(2.5); tier(); };
   const tier = () => { const z = lmap.getZoom() - fitZoom, el = $("#lmap"); el.classList.toggle("z1", z < .7); el.classList.toggle("z2", z >= .7 && z < 1.5); };
   lmap.on("zoomend", tier);
   fit(); requestAnimationFrame(fit);
   lmap.on("click", () => { $("#mres").hidden = true; if(!$("#mlayers").hidden) $("#mlayers").hidden = true; else if(selId) unselect(); else if(hlIds.length) clearHighlight(); });
-  buildMarkers();
+  buildMarkers(); placeHome();
   if(hlWaiting) requestAnimationFrame(applyHighlight);
+  else requestAnimationFrame(() => goHome(true));
 }
 
 $("#mquick").addEventListener("click", e => {
@@ -906,6 +939,7 @@ $("#mlayers").addEventListener("click", e => {
   if("later" in b.dataset){ showLater = !showLater; store.set("mlater", showLater); if(lmap) drawPins(); renderLayers(); }
   if("hidedone" in b.dataset){ hideDone = !hideDone; store.set("mhidedone", hideDone); if(lmap) applyLayers(); renderLayers(); }
 });
+$("#mhome").onclick = () => { if(lmap) goHome(false); };
 $("#mfit").onclick = () => { if(lmap) lmap.flyToBounds([[-MAP_H,0],[0,MAP_W]], {duration:.6}); };
 $("#mq").addEventListener("input", () => {
   if(!$("#mq").value.trim()){ $("#mres").hidden = true; return; }
@@ -943,7 +977,7 @@ function applyHighlight(){
   else { if(selId) unselect(); requestAnimationFrame(() => lmap.flyToBounds(L.latLngBounds(pts.map(ll)), {padding:[70,70], maxZoom:fitZoom + 2, duration:.8})); }
 }
 function clearHighlight(){ hlIds = []; if(hlLayer) hlLayer.clearLayers(); }
-function drawPins(){ if(!lmap) return; for(const p of POIS) refreshMarker(p.id); applyLayers(); }
+function drawPins(){ if(!lmap) return; placeHome(); for(const p of POIS) refreshMarker(p.id); applyLayers(); }
 
 /* ---------- navigation et réglages ---------- */
 let view = "chat";
