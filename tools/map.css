@@ -1,0 +1,50 @@
+
+/* Carte : poster officiel de Leonida (hébergé par Rockstar), navigation façon appli de cartes */
+#v-map{background:#0a3f4f}
+#lmap{position:absolute;inset:0;background:#08a9c6}
+#lmap.noimg{background:repeating-linear-gradient(0deg,transparent 0 79px,rgba(255,255,255,.06) 79px 80px),repeating-linear-gradient(90deg,transparent 0 79px,rgba(255,255,255,.06) 79px 80px),#0b4a5c}
+.mtop{position:absolute;z-index:500;top:10px;left:var(--gut-l);right:var(--gut-r);display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.mtop > *{pointer-events:auto}
+.msearch{position:relative}
+.msearch input{width:100%;background:rgba(23,17,31,.94);color:var(--txt);border:1px solid var(--line);border-radius:999px;padding:11px 16px 11px 40px;font:inherit;font-size:16px;box-shadow:0 6px 20px rgba(0,0,0,.35)}
+.msearch::before{content:"⌕";position:absolute;left:15px;top:50%;transform:translateY(-52%);color:var(--pink);font-size:20px;pointer-events:none}
+#mres{background:rgba(23,17,31,.97);border:1px solid var(--line);border-radius:14px;max-height:45vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+#mres button{display:flex;gap:10px;align-items:center;width:100%;background:none;border:0;border-bottom:1px solid var(--line);padding:10px 14px;text-align:left}
+#mres button:last-child{border-bottom:0}
+#mres small{color:var(--mut);margin-left:auto;white-space:nowrap}
+#mfilters{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+#mfilters::-webkit-scrollbar{display:none}
+#mfilters .chip{background:rgba(23,17,31,.92);display:flex;align-items:center;gap:6px;padding:6px 11px;font-size:12.5px}
+#mfilters .chip.off{opacity:.45}
+.dot{width:10px;height:10px;border-radius:50%;flex:none;background:var(--c);box-shadow:0 0 8px var(--c)}
+.mnote{position:absolute;z-index:500;left:var(--gut-l);right:var(--gut-r);bottom:10px;background:rgba(23,17,31,.95);border:1px solid var(--sun);border-radius:12px;padding:10px 12px;font-size:13px;color:var(--txt)}
+.mnote a{color:var(--sun)}
+.mctl{position:absolute;z-index:500;right:var(--gut-r);bottom:16px;display:flex;flex-direction:column;gap:8px}
+.mctl button{width:44px;height:44px;border-radius:50%;background:rgba(23,17,31,.94);border:1px solid var(--line);font-size:20px;line-height:1;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+/* Marqueurs */
+.pin{width:22px;height:22px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--c);border:2px solid #120c19;box-shadow:0 0 0 2px var(--c),0 0 14px var(--c);display:grid;place-items:center}
+.pin i{transform:rotate(45deg);font-style:normal;font-size:11px;font-weight:700;color:#120c19}
+.pin.lock{background:#3b3050;box-shadow:0 0 0 2px #6d5d86;}
+.pin.lock i{color:#cfc3e0}
+.pin.sel{box-shadow:0 0 0 3px #fff,0 0 22px var(--c)}
+.lpin{width:12px;height:12px;border-radius:50%;background:#fff;border:3px solid #120c19;box-shadow:0 0 0 2px rgba(255,255,255,.5)}
+.lpin.big{width:16px;height:16px;background:var(--sun)}
+.pulse{width:60px;height:60px;border-radius:50%;border:3px solid var(--pink);animation:pul 1.4s ease-out 3;opacity:0}
+@keyframes pul{0%{transform:scale(.2);opacity:1}100%{transform:scale(1.2);opacity:0}}
+.leaflet-container{font:inherit;background:transparent}
+.leaflet-tooltip.ptip{background:rgba(23,17,31,.95);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:12px;box-shadow:none}
+.leaflet-tooltip.ptip::before{display:none}
+/* Fiche d'un point */
+#mcard{position:absolute;z-index:600;left:0;right:0;bottom:0;background:var(--panel);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:8px var(--gut-r) 16px var(--gut-l);box-shadow:0 -10px 30px rgba(0,0,0,.45);max-height:60%;overflow-y:auto}
+#mcard .grab{width:40px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 10px}
+#mcard h3{margin:0 0 3px;font-size:17px;line-height:1.25;padding-right:36px}
+#mcard .meta{font-size:11.5px;color:var(--mut);letter-spacing:.05em;text-transform:uppercase;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#mcard .meta .cell{font-family:var(--display);font-size:15px;letter-spacing:.5px;color:var(--cyan);text-transform:none}
+#mcard p{margin:8px 0 0;font-size:14px;color:#ddd3e8}
+#mcard .approx{color:var(--sun);font-size:12.5px}
+#mcard .acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+#mcard .acts a{text-decoration:none}
+#mcard .x{position:absolute;top:10px;right:var(--gut-r);width:32px;height:32px;border-radius:50%;background:var(--panel2);border:1px solid var(--line);color:var(--mut)}
+#mcard .blur{filter:blur(6px);user-select:none}
+.leaflet-control-attribution{background:rgba(23,17,31,.8)!important;color:var(--mut)!important;font-size:10px}
+.leaflet-control-attribution a{color:var(--mut)!important}

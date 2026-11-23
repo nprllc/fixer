@@ -20,3 +20,9 @@ Publié comme artifact claude.ai : https://claude.ai/artifact/To7um7NfK1wfhcmh5u
 
 - Site (GitHub Pages) : https://nprllc.github.io/fixer/ — Guide, missions et recherche dans les fiches. Sans claude.ai, pas de chat IA ni de sync : la progression reste dans le navigateur.
 - Version complète (chat IA, progression synchronisée) : l'artifact claude.ai.
+
+## Carte de Leonida
+
+Onglet Carte : le poster officiel Rockstar « The Great State of Leonida », affiché depuis le site de Rockstar (l'image n'est pas copiée dans ce dépôt). On peut glisser, zoomer au pincement, chercher et filtrer, et la carte respecte l'anti-spoiler.
+- `app/pois.json` : 135 lieux relevés sur le poster et 73 points de la base. `a:1` marque un emplacement approximatif (zone seulement), `g` donne la case du quadrillage du poster.
+- `tools/build-pois.js` régénère `pois.json`, `tools/map.js`, `map.css` et `patch-map.js` ont servi à intégrer l'onglet.
