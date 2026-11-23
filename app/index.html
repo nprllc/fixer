@@ -208,6 +208,8 @@ const MAPS = [["GTABase","https://www.gtabase.com/gta-6/map"],["Map Genie","http
 
 /* Ratables et rappels liés à la progression. before = id de la mission qui les fait disparaître. */
 const CHECKS = [
+  {id:"c-ringbell", ch:1, before:"m1-17", after:"m1-16", t:"Ring the Bell! (Cal)", d:"Verre au Rusty Anchor, avant Swamped"},
+  {id:"c-lostdrugs", ch:1, before:"m1-20", after:"m1-14", t:"Find the Lost Drugs", d:"Vends les colis à Donnie, idéalement avant Clear Skies"},
   {id:"c-shirley-rum", ch:1, before:"m1-20", t:"Get Shirley's Rum", d:"Shirley, magasin d'alcool des Keys"},
   {id:"c-shirley-scoot", ch:1, before:"m1-20", t:"Steal the Scooter", d:"Shirley, suite de la quête"},
   {id:"c-balcon", ch:1, before:"m1-20", after:"m1-14", t:"Méditer sur le balcon avec Lucia", d:"Le matin après Down to Earth"},
@@ -218,7 +220,12 @@ const CHECKS = [
   {id:"c-epargne2", ch:2, before:"m2-11", t:"15 000 $ mis de côté", d:"Avant de défendre le motel"},
   {id:"c-save2", ch:2, before:"m2-11", t:"Sauvegarde manuelle permanente", d:"Juste avant Checking Out"},
   {id:"c-yago", ch:3, t:"Race Against Yago", d:"Limitée dans le temps : dès que le sablier apparaît"},
-  {id:"c-shayna", ch:4, t:"This Is a Free Call From… (Shayna)", d:"Limitée dans le temps, ratable"},
+  {id:"c-monty", ch:3, before:"m3-22", after:"m3-20", t:"Pistolet de Monty (1992)", d:"À ramasser pendant The Missing Link"},
+  {id:"c-statue", ch:3, before:"m3-26", after:"m3-4", t:"Donner la statue à Halifax", d:"Sinon la suite et son butin sont perdus"},
+  {id:"c-fences", ch:3, before:"m3-26", t:"Revendre les objets volés", d:"Certains receleurs disparaissent ensuite"},
+  {id:"c-shayna", ch:4, t:"This Is a Free Call From… (Shayna)", d:"Lucia, limitée dans le temps, ratable"},
+  {id:"c-felipe", ch:4, before:"m4-16", t:"Bad Driver! (Felipe)", d:"Disparaît au lancement de Power Play"},
+  {id:"c-abe", ch:5, before:"m5-6", t:"Virer ton cash sur Family Savings", d:"Le compte courant est perdu chez Abe"},
   {id:"c-preps", ch:4, before:"m4-23", t:"Toutes les préparations du VCIA Takedown", d:"Avant le braquage de l'aéroport"},
   {id:"c-save5", ch:5, before:"m5-6", t:"Sauvegarde séparée avant la fin", d:"Avant Protective Custody"}
 ];
@@ -283,17 +290,26 @@ function buildIndex(){
 }
 function hit(set, w){
   if(set.has(w)) return 1;
-  if(w.length >= 4) for(const k of set){ if(k.length>=4 && (k.startsWith(w) || w.startsWith(k))) return .7; }
-  return 0;
+  let best = 0;
+  if(w.length >= 4) for(const k of set){
+    if(k.length>=4 && (k.startsWith(w) || w.startsWith(k))) return .7;
+    if(w.length>=6 && k.length>=6 && k.slice(0,5)===w.slice(0,5)) best = .5;
+  }
+  return best;
 }
 function score(query){
   const base = tok(query).filter(t => t.length>1 && !STOP.has(t));
   const terms = base.map(w => [w,1]);
   for(const w of base){ (SYN[w]||"").split(" ").filter(Boolean).forEach(s => terms.push([s,.5])); }
   if(!terms.length) return [];
+  const N = IDX.length || 1;
+  const idf = terms.map(([w]) => {
+    const df = IDX.filter(r => hit(r.t,w) || hit(r.g,w) || hit(r.x,w)).length;
+    return Math.log(1 + N/(1+df));
+  });
   return IDX.map(r => {
     let s = 0;
-    for(const [w,k] of terms){ s += k*(6*hit(r.t,w) + 4*hit(r.g,w) + hit(r.x,w)); }
+    terms.forEach(([w,k], i) => { s += k*idf[i]*(6*hit(r.t,w) + 4*hit(r.g,w) + hit(r.x,w)); });
     return {f:r.f, s};
   }).filter(r => r.s>0).sort((a,b) => b.s-a.s);
 }
