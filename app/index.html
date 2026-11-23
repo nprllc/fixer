@@ -1,0 +1,695 @@
+<title>Le Fixer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout : app plein écran, en-tête fixe, vue au centre qui défile, barre d'onglets en bas (pouce). Un seul thème sombre néon, assumé. */
+:root{
+  --bg:#0d0a14; --panel:#17111f; --panel2:#211830; --line:#2e2340;
+  --pink:#ff4fa3; --cyan:#3ee6e0; --sun:#ffb14a; --txt:#f1eaf7; --mut:#a597b8;
+  --ok:#5be38a; --warn:#ffb14a; --bad:#ff7a7a;
+  --display:"Bebas Neue",Impact,"Arial Narrow",sans-serif;
+  --body:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --gut-l:max(14px, env(safe-area-inset-left, 0px));
+  --gut-r:max(14px, env(safe-area-inset-right, 0px));
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{height:100%;background:var(--bg)}
+body{margin:0;height:100%;display:flex;flex-direction:column;overflow:hidden;color:var(--txt);font:15px/1.45 var(--body);
+  background:radial-gradient(120% 55% at 100% 0%,#3a1240 0%,transparent 55%),radial-gradient(90% 45% at 0% 100%,#0f3340 0%,transparent 60%),var(--bg)}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* En-tête */
+header{flex:none;display:flex;align-items:center;gap:10px;padding:10px var(--gut-r) 9px var(--gut-l);border-bottom:1px solid var(--line)}
+.logo{font-family:var(--display);font-size:29px;letter-spacing:1px;line-height:1;
+  background:linear-gradient(90deg,var(--pink),var(--sun));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{font-size:10.5px;color:var(--mut);letter-spacing:.09em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:46vw}
+.hright{margin-left:auto;display:flex;gap:6px;align-items:center}
+select{background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:7px 8px;font:inherit;font-size:13px}
+.iconbtn{background:var(--panel2);border:1px solid var(--line);border-radius:10px;width:36px;height:34px;display:grid;place-items:center;font-size:16px;color:var(--mut)}
+
+/* Vues */
+main{flex:1;min-height:0;position:relative}
+.view{position:absolute;inset:0;display:flex;flex-direction:column}
+.scroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px var(--gut-r) 18px var(--gut-l)}
+
+/* Chat */
+#chat{display:flex;flex-direction:column;gap:10px}
+.msg{max-width:90%;padding:10px 13px;border-radius:16px;word-wrap:break-word;overflow-wrap:anywhere;min-width:0}
+.msg p{margin:0 0 6px}.msg p:last-child{margin:0}
+.msg ul{margin:4px 0;padding-left:18px}
+.me{align-self:flex-end;background:linear-gradient(135deg,#c2347f,#ff4fa3);color:#fff;border-bottom-right-radius:5px;white-space:pre-wrap}
+.bot{align-self:flex-start;background:var(--panel);border:1px solid var(--line);border-bottom-left-radius:5px}
+.bot b{color:var(--cyan);font-weight:600}
+.bot a{color:var(--sun)}
+.bot .tools{display:flex;gap:6px;margin-top:8px}
+.mini{background:transparent;border:1px solid var(--line);border-radius:999px;padding:3px 9px;font-size:12px;color:var(--mut)}
+.mini.on{border-color:var(--cyan);color:var(--cyan)}
+.thinking{color:var(--mut);font-style:italic}
+.thinking::after{content:"";display:inline-block;width:1em;animation:dots 1.2s steps(4) infinite}
+@keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
+.err{color:var(--bad)}
+.welcome{color:var(--mut);font-size:14px;text-align:center;margin:8px auto 0;max-width:34ch}
+.welcome .big{font-family:var(--display);font-size:26px;color:var(--txt);letter-spacing:.5px;line-height:1.05;margin-bottom:6px}
+.status{margin:12px auto 0;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 12px;font-size:13px;color:var(--mut);text-align:left;max-width:420px}
+.status b{color:var(--txt)}
+#chips{flex:none;display:flex;gap:8px;overflow-x:auto;padding:6px var(--gut-r) 8px var(--gut-l);scrollbar-width:none}
+#chips::-webkit-scrollbar{display:none}
+.chip{flex:none;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-size:13px}
+.chip:active{border-color:var(--cyan)}
+.chip.hot{border-color:var(--sun);color:var(--sun)}
+#f{flex:none;display:flex;gap:8px;align-items:flex-end;padding:8px var(--gut-r) 10px var(--gut-l);border-top:1px solid var(--line);background:rgba(13,10,20,.9)}
+textarea{flex:1;min-width:0;resize:none;background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:14px;padding:10px 12px;font:inherit;font-size:16px;max-height:120px}
+textarea:focus{outline:none;border-color:var(--pink)}
+.btn{flex:none;width:44px;height:44px;border-radius:50%;border:0;display:grid;place-items:center;font-size:18px}
+#send{background:linear-gradient(135deg,var(--pink),var(--sun));color:#1a0b14}
+#send.stop{background:var(--panel2);color:var(--bad);border:1px solid var(--bad)}
+#mic{background:var(--panel2);color:var(--cyan);border:1px solid var(--line)}
+#mic.on{background:var(--cyan);color:var(--bg)}
+
+/* Progression */
+.h2{font-family:var(--display);font-size:22px;letter-spacing:.5px;margin:4px 0 8px;text-wrap:balance}
+.hint{color:var(--mut);font-size:13px;margin:0 0 12px}
+.bar{height:6px;background:var(--panel2);border-radius:999px;overflow:hidden;margin:6px 0 14px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--pink),var(--sun))}
+.alert{border:1px solid var(--sun);background:rgba(255,177,74,.08);border-radius:14px;padding:10px 12px;margin-bottom:14px;font-size:13.5px}
+.alert b{color:var(--sun)}
+.alert ul{margin:6px 0 0;padding-left:18px}
+details.ch{border:1px solid var(--line);border-radius:14px;background:var(--panel);margin-bottom:10px;overflow:hidden}
+details.ch summary{list-style:none;display:flex;align-items:center;gap:10px;padding:12px;cursor:pointer}
+details.ch summary::-webkit-details-marker{display:none}
+.chn{font-family:var(--display);font-size:20px;color:var(--pink);min-width:28px}
+.cht{flex:1;min-width:0;font-weight:600}
+.cht small{display:block;font-weight:400;color:var(--mut);font-size:12px}
+.cnt{font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums}
+.mrow{display:flex;align-items:center;gap:10px;padding:9px 12px;border-top:1px solid var(--line)}
+.mrow.cur{background:rgba(62,230,224,.07)}
+.mrow.pnr .mname::after{content:" · point de non-retour";color:var(--bad);font-size:11px;font-weight:600}
+.box{flex:none;width:24px;height:24px;border-radius:7px;border:1.5px solid var(--line);background:transparent;display:grid;place-items:center;font-size:14px;color:var(--bg);padding:0}
+.box.on{background:var(--ok);border-color:var(--ok)}
+.mnum{width:22px;color:var(--mut);font-size:12px;font-variant-numeric:tabular-nums;text-align:right}
+.mname{flex:1;min-width:0}
+.mrow.done .mname{color:var(--mut)}
+.here{flex:none;background:transparent;border:1px solid var(--line);border-radius:999px;padding:3px 9px;font-size:11.5px;color:var(--cyan)}
+.mrow.cur .here{background:var(--cyan);color:var(--bg);border-color:var(--cyan)}
+.crow{display:flex;gap:10px;align-items:flex-start;padding:9px 12px;border-top:1px solid var(--line)}
+.crow .mname small{display:block;color:var(--mut);font-size:12px}
+.sync{font-size:11.5px;color:var(--mut);text-align:center;margin-top:10px}
+
+/* Guide */
+.search{display:flex;gap:8px;margin-bottom:10px}
+.search input{flex:1;min-width:0;background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:inherit;font-size:16px}
+#cats{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-bottom:12px}
+#cats::-webkit-scrollbar{display:none}
+#cats .chip{padding:5px 11px;font-size:12.5px}
+#cats .chip.sel{background:var(--pink);border-color:var(--pink);color:#1a0b14}
+.card{border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:12px;margin-bottom:10px}
+.card h3{margin:0 0 2px;font-size:15px;line-height:1.3}
+.meta{font-size:11.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.card .tx{font-size:14px;color:#ddd3e8}
+.card.lock .tx{filter:blur(6px);user-select:none;max-height:3.2em;overflow:hidden}
+.card .acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.card .acts a{text-decoration:none}
+.spoil{color:var(--sun);font-size:12.5px;margin:6px 0 0}
+.empty{color:var(--mut);text-align:center;padding:30px 10px}
+
+/* Onglets */
+nav{flex:none;display:flex;border-top:1px solid var(--line);background:rgba(13,10,20,.96);padding:0 var(--gut-r) 0 var(--gut-l)}
+nav button{flex:1;background:none;border:0;padding:9px 0 8px;display:flex;flex-direction:column;align-items:center;gap:1px;color:var(--mut);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+nav button .ic{font-family:var(--display);font-size:19px;letter-spacing:.5px;text-transform:none}
+nav button.sel{color:var(--pink)}
+
+/* Réglages */
+#sheet{position:fixed;inset:0;background:rgba(5,3,10,.7);display:flex;align-items:flex-end;z-index:20}
+#sheet .in{width:100%;background:var(--panel);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:16px var(--gut-r) calc(18px + env(safe-area-inset-bottom,0px)) var(--gut-l)}
+.set{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.set:last-of-type{border-bottom:0}
+.set label{flex:1;min-width:0}
+.set label small{display:block;color:var(--mut);font-size:12px}
+.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{background:transparent;border:0;padding:6px 10px;font-size:13px;color:var(--mut)}
+.seg button.sel{background:var(--panel2);color:var(--cyan)}
+.danger{background:transparent;border:1px solid var(--line);border-radius:10px;padding:7px 10px;font-size:13px;color:var(--bad)}
+.close{width:100%;margin-top:12px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:11px}
+</style>
+
+<header>
+  <div style="min-width:0">
+    <div class="logo">LE FIXER</div>
+    <div class="sub" id="where">Copilote GTA VI</div>
+  </div>
+  <div class="hright">
+    <select id="chap" aria-label="Chapitre en cours">
+      <option value="1">Chap. 1</option><option value="2">Chap. 2</option><option value="3">Chap. 3</option>
+      <option value="4">Chap. 4</option><option value="5">Chap. 5</option><option value="6">Fini</option>
+    </select>
+    <select id="perso" aria-label="Personnage joué">
+      <option value="Jason">Jason</option><option value="Lucia">Lucia</option>
+    </select>
+    <button class="iconbtn" id="openSet" aria-label="Réglages" title="Réglages">⚙</button>
+  </div>
+</header>
+
+<main>
+  <section class="view" id="v-chat">
+    <div class="scroll" id="chatScroll"><div id="chat"></div></div>
+    <div id="chips"></div>
+    <form id="f">
+      <textarea id="q" rows="1" placeholder="Un PNJ, un lieu, un choix… raconte"></textarea>
+      <button type="button" class="btn" id="mic" aria-label="Dicter" hidden>🎙</button>
+      <button type="submit" class="btn" id="send" aria-label="Envoyer">➤</button>
+    </form>
+  </section>
+
+  <section class="view" id="v-prog" hidden>
+    <div class="scroll" id="progScroll"></div>
+  </section>
+
+  <section class="view" id="v-guide" hidden>
+    <div class="scroll">
+      <div class="search"><input id="gq" type="search" placeholder="Chercher : Kenton, OVNI, flamants…" aria-label="Chercher dans le guide"></div>
+      <div id="cats"></div>
+      <div id="cards"></div>
+    </div>
+  </section>
+</main>
+
+<nav>
+  <button type="button" data-v="chat" class="sel"><span class="ic">Fixer</span>Chat</button>
+  <button type="button" data-v="prog"><span class="ic">Où j'en suis</span>Missions</button>
+  <button type="button" data-v="guide"><span class="ic">Guide</span>Fiches</button>
+</nav>
+
+<div id="sheet" hidden>
+  <div class="in" role="dialog" aria-label="Réglages">
+    <div class="h2">Réglages</div>
+    <div class="set"><label>Cerveau<small>Rapide : réponse en quelques secondes. Réfléchi : plus fiable, plus lent.</small></label>
+      <div class="seg" id="tier"><button type="button" data-t="quick">Rapide</button><button type="button" data-t="default">Réfléchi</button></div></div>
+    <div class="set" id="ttsRow" hidden><label>Lire les réponses à voix haute<small>Disponible dans un navigateur Chromium ou l'app de bureau.</small></label>
+      <div class="seg" id="autoTts"><button type="button" data-a="0">Non</button><button type="button" data-a="1">Oui</button></div></div>
+    <div class="set"><label>Conversation<small>Efface l'historique du chat sur cet appareil.</small></label><button type="button" class="danger" id="resetChat">Effacer</button></div>
+    <div class="set"><label>Progression<small>Décoche toutes les missions et les ratables.</small></label><button type="button" class="danger" id="resetProg">Remettre à zéro</button></div>
+    <p class="hint" id="confirmProg" hidden style="margin-top:8px">Tape encore une fois sur « Remettre à zéro » pour confirmer.</p>
+    <button type="button" class="close" id="closeSet">Fermer</button>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+const $ = s => document.querySelector(s);
+const chatEl = $("#chat"), chatScroll = $("#chatScroll"), qEl = $("#q"), chapEl = $("#chap"), persoEl = $("#perso");
+const CH_NAMES = {1:"Just Like Paradise",2:"Paradise Lost",3:"Tits Ass Drug Money",4:"Vice City, Baby",5:"Top of the World, Ma"};
+const MAPS = [["GTABase","https://www.gtabase.com/gta-6/map"],["Map Genie","https://mapgenie.io/grand-theft-auto-6/maps/leonida"]];
+
+/* Ratables et rappels liés à la progression. before = id de la mission qui les fait disparaître. */
+const CHECKS = [
+  {id:"c-shirley-rum", ch:1, before:"m1-20", t:"Get Shirley's Rum", d:"Shirley, magasin d'alcool des Keys"},
+  {id:"c-shirley-scoot", ch:1, before:"m1-20", t:"Steal the Scooter", d:"Shirley, suite de la quête"},
+  {id:"c-balcon", ch:1, before:"m1-20", after:"m1-14", t:"Méditer sur le balcon avec Lucia", d:"Le matin après Down to Earth"},
+  {id:"c-mags", ch:1, before:"m1-20", t:"4 magazines de la maison de Jason", d:"Chevet, salon, cabane à outils, terrasse"},
+  {id:"c-epargne1", ch:1, before:"m1-20", t:"5 000 $ en Family Savings", d:"Le cash en poche sera perdu"},
+  {id:"c-save1", ch:1, before:"m1-20", t:"Sauvegarde manuelle permanente", d:"Juste avant Tourist Trap"},
+  {id:"c-vicki", ch:2, before:"m2-11", t:"Carte Delights Dancers #1 Vicki", d:"Toilettes du bureau du Starlet Motel"},
+  {id:"c-epargne2", ch:2, before:"m2-11", t:"15 000 $ mis de côté", d:"Avant de défendre le motel"},
+  {id:"c-save2", ch:2, before:"m2-11", t:"Sauvegarde manuelle permanente", d:"Juste avant Checking Out"},
+  {id:"c-yago", ch:3, t:"Race Against Yago", d:"Limitée dans le temps : dès que le sablier apparaît"},
+  {id:"c-shayna", ch:4, t:"This Is a Free Call From… (Shayna)", d:"Limitée dans le temps, ratable"},
+  {id:"c-preps", ch:4, before:"m4-23", t:"Toutes les préparations du VCIA Takedown", d:"Avant le braquage de l'aéroport"},
+  {id:"c-save5", ch:5, before:"m5-6", t:"Sauvegarde séparée avant la fin", d:"Avant Protective Custody"}
+];
+const PNR = new Set(["m1-20","m2-11","m4-23","m5-6"]);
+
+let KB = [], MISSIONS = [], history = [], busy = false, ctl = null;
+let sample = null, dict = null, tts = null, db = null, docRef = null;
+let P = {done:[], checks:[], cur:null, chap:"1", perso:"Jason", tier:"quick", autoTts:false};
+
+/* ---------- stockage ---------- */
+const store = {
+  get(k,d){ try{ const v = localStorage.getItem("fixer:"+k); return v==null?d:JSON.parse(v);}catch(e){return d;} },
+  set(k,v){ try{ localStorage.setItem("fixer:"+k, JSON.stringify(v)); }catch(e){} }
+};
+Object.assign(P, store.get("p", {}));
+if(!store.get("p", null)){ P.chap = store.get("chap","1"); P.perso = store.get("perso","Jason"); }
+history = store.get("history", []);
+let syncNote = "Progression gardée sur cet appareil.";
+let saveTimer = null;
+function save(){
+  P.updatedAt = Date.now();
+  store.set("p", P);
+  if(!docRef) return;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    const {done,checks,cur,chap,perso,tier,autoTts,updatedAt} = P;
+    docRef.set({done,checks,cur,chap,perso,tier,autoTts,updatedAt}).then(()=>{ syncNote = "Progression synchronisée sur ton compte Claude."; if(view==="prog") renderProg(); })
+      .catch(()=>{ syncNote = "Synchro indisponible, progression gardée sur cet appareil."; });
+  }, 700);
+}
+function applyHeader(){
+  chapEl.value = P.chap; persoEl.value = P.perso;
+  const m = MISSIONS.find(x => x.id===P.cur);
+  $("#where").textContent = m ? `Ch.${m.ch} · ${m.nom}` : (P.chap==="6" ? "Histoire terminée" : `Ch.${P.chap} · ${CH_NAMES[P.chap]||""}`);
+}
+chapEl.onchange = () => { P.chap = chapEl.value; save(); applyHeader(); refreshViews(); };
+persoEl.onchange = () => { P.perso = persoEl.value; save(); };
+
+/* ---------- recherche ---------- */
+const norm = s => (s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9' ]/g," ").replace(/'/g," ");
+const STOP = new Set("le la les un une des de du d l a au aux et ou en dans sur pour par avec que qui quoi quel quelle quels quelles est sont ce cet cette ces je j tu il elle on nous vous ils me m te t se s mon ma mes ton ta tes son sa ses faire fait fais comment c qu y ya the of to is in it ca cela ai as vient viens dois peux veux va vais quand pas plus tres bien alors donc mais si suis etre avoir".split(" "));
+const SYN = {
+  argent:"cash money fric thune dollars", fric:"argent cash", thune:"argent cash", cash:"argent", money:"argent",
+  voiture:"vehicule car caisse", caisse:"voiture vehicule", vehicule:"voiture", bagnole:"voiture vehicule",
+  flic:"police", flics:"police", keuf:"police", police:"flic etoiles",
+  rater:"missable ratable", ratable:"missable", ratables:"missable", missable:"ratable",
+  planque:"safehouse maison motel", trophee:"trophy", trophy:"trophee",
+  mec:"homme", type:"homme", gars:"homme", meuf:"femme", fille:"femme", vieux:"vieille vieil",
+  costume:"suit", tueur:"hitman", braquer:"braquage stick", braquage:"heist braquer",
+  chien:"dog", ovni:"ufo", alien:"ovni ufo", extraterrestre:"ovni ufo", bigfoot:"skunk",
+  tresor:"plongee epave", plongee:"kenton tresor epave", epave:"kenton shipwreck",
+  fin:"ending finale", ending:"fin", choix:"choice consequence", consequence:"choix",
+  collectible:"collectibles", collectionner:"collectibles cartes", carte:"cards map",
+  oiseau:"flamant perroquet", flamant:"flamingos", requin:"shark", avion:"pilot plane",
+  course:"race yago", courses:"race yago", chasse:"bret hunting", chasser:"bret hunting",
+  quoi:"", maintenant:"", suite:"prochaine"
+};
+const tok = s => norm(s).split(/\s+/).filter(Boolean);
+let IDX = [];
+function buildIndex(){
+  IDX = KB.map(f => ({f, t:new Set(tok(f.titre)), g:new Set(tok(f.tags+" "+f.cat)), x:new Set(tok(f.texte))}));
+}
+function hit(set, w){
+  if(set.has(w)) return 1;
+  if(w.length >= 4) for(const k of set){ if(k.length>=4 && (k.startsWith(w) || w.startsWith(k))) return .7; }
+  return 0;
+}
+function score(query){
+  const base = tok(query).filter(t => t.length>1 && !STOP.has(t));
+  const terms = base.map(w => [w,1]);
+  for(const w of base){ (SYN[w]||"").split(" ").filter(Boolean).forEach(s => terms.push([s,.5])); }
+  if(!terms.length) return [];
+  return IDX.map(r => {
+    let s = 0;
+    for(const [w,k] of terms){ s += k*(6*hit(r.t,w) + 4*hit(r.g,w) + hit(r.x,w)); }
+    return {f:r.f, s};
+  }).filter(r => r.s>0).sort((a,b) => b.s-a.s);
+}
+const prog = () => +P.chap;
+const pack = f => ({id:f.id, cat:f.cat, titre:f.titre, chapitre:f.chap||"tous", au_dela_de_ta_progression: f.chap > prog(), texte:f.texte});
+function search(query, max){ return score(query).slice(0, max||4).map(r => pack(r.f)); }
+function read(id){ const f = KB.find(k => k.id===id); return f ? pack(f) : {erreur:"fiche inconnue"}; }
+
+/* ---------- progression ---------- */
+const doneSet = () => new Set(P.done);
+const idx = id => MISSIONS.findIndex(m => m.id===id);
+function nextMission(){ const d = doneSet(); return MISSIONS.find(m => !d.has(m.id)) || null; }
+function lastDone(){ const d = doneSet(); let l = null; for(const m of MISSIONS) if(d.has(m.id)) l = m; return l; }
+function setHere(id){
+  const i = idx(id); if(i<0) return;
+  P.done = MISSIONS.slice(0, i).map(m => m.id);
+  P.cur = id; P.chap = String(MISSIONS[i].ch);
+  save(); applyHeader(); refreshViews();
+}
+function toggleDone(id){
+  const d = doneSet();
+  d.has(id) ? d.delete(id) : d.add(id);
+  P.done = MISSIONS.filter(m => d.has(m.id)).map(m => m.id);
+  const n = nextMission();
+  P.cur = n ? n.id : null;
+  P.chap = n ? String(n.ch) : "6";
+  save(); applyHeader(); refreshViews();
+}
+function checkGone(c){ return c.before && doneSet().has(c.before); }
+function pendingChecks(){
+  const c = new Set(P.checks), ch = prog();
+  return CHECKS.filter(x => !c.has(x.id) && !checkGone(x) && x.ch <= ch && (!x.after || doneSet().has(x.after)) && (x.ch===ch || !x.before));
+}
+function progressText(){
+  const n = nextMission(), l = lastDone(), pc = pendingChecks();
+  let s = "";
+  if(P.chap==="6") s += "Histoire terminée.";
+  else if(P.cur || P.done.length){
+    s += l ? `Dernière mission terminée : ${l.nom} (ch.${l.ch} n°${l.n}). ` : "";
+    s += n ? `Mission en cours / prochaine : ${n.nom} (ch.${n.ch} n°${n.n}${PNR.has(n.id)?", POINT DE NON-RETOUR":""}).` : "";
+  } else s += "Nico n'a pas encore indiqué sa mission précise, seulement le chapitre.";
+  if(pc.length) s += `\nRatables / rappels pas encore cochés : ${pc.map(c => c.t + (c.before ? " (avant " + (MISSIONS.find(m=>m.id===c.before)||{}).nom + ")" : "")).join(" ; ")}.`;
+  return s;
+}
+
+/* ---------- rendu texte ---------- */
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function inline(s){
+  return esc(s)
+    .replace(/\*\*(.+?)\*\*/g,"<b>$1</b>")
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>')
+    .replace(/(^|[\s(])(https?:\/\/[^\s)<]+)/g,'$1<a href="$2" target="_blank" rel="noopener">$2</a>');
+}
+function md(s){
+  const out = []; let list = null;
+  for(const line of String(s).split("\n")){
+    const m = line.match(/^\s*[-•*]\s+(.*)/);
+    if(m){ if(!list){ list = []; } list.push("<li>"+inline(m[1])+"</li>"); continue; }
+    if(list){ out.push("<ul>"+list.join("")+"</ul>"); list = null; }
+    if(line.trim()) out.push("<p>"+inline(line)+"</p>");
+  }
+  if(list) out.push("<ul>"+list.join("")+"</ul>");
+  return out.join("");
+}
+const plain = s => String(s).replace(/\*\*/g,"").replace(/\[([^\]]+)\]\([^)]+\)/g,"$1").replace(/https?:\/\/\S+/g,"").replace(/^\s*[-•*]\s+/gm,"");
+
+/* ---------- chat ---------- */
+function scrollChat(){ chatScroll.scrollTop = chatScroll.scrollHeight; }
+function bubble(role, text){
+  const d = document.createElement("div");
+  d.className = "msg " + (role==="user" ? "me" : "bot");
+  if(role==="user") d.textContent = text; else setBot(d, text);
+  chatEl.appendChild(d); scrollChat();
+  return d;
+}
+function setBot(d, text, final){
+  d.innerHTML = md(text);
+  if(final && tts && text){
+    const t = document.createElement("div"); t.className = "tools";
+    const b = document.createElement("button"); b.type = "button"; b.className = "mini"; b.textContent = "▶ Écouter";
+    b.onclick = () => speak(text, b);
+    t.appendChild(b); d.appendChild(t);
+  }
+}
+function welcome(){
+  chatEl.innerHTML = "";
+  if(history.length){ history.forEach(m => { const b = bubble(m.role, m.content); if(m.role!=="user") setBot(b, m.content, true); }); return; }
+  const n = nextMission();
+  const w = document.createElement("div");
+  w.className = "welcome";
+  w.innerHTML = '<div class="big">Dis-moi ce qui se passe.</div>Un PNJ te parle, tu cherches un lieu, tu hésites sur un choix : je te dis quoi faire, sans spoiler au-delà de ta progression.';
+  const st = document.createElement("div"); st.className = "status";
+  st.innerHTML = (P.cur || P.done.length) && n
+    ? `Prochaine mission : <b>${esc(n.nom)}</b> (ch.${n.ch})${PNR.has(n.id) ? ' · <b style="color:var(--bad)">point de non-retour</b>' : ""}. ${pendingChecks().length ? pendingChecks().length + " ratable(s) à vérifier dans « Où j'en suis »." : ""}`
+    : `Indique ta mission dans <b>Où j'en suis</b> : je saurai quoi te conseiller et ce que tu risques de rater.`;
+  w.appendChild(st);
+  chatEl.appendChild(w);
+}
+function chips(){
+  const n = nextMission(), pc = pendingChecks();
+  const list = [
+    ["Quoi faire maintenant ?"],
+    ["Un PNJ vient de me parler…"],
+    pc.length ? ["Qu'est-ce que je risque de rater ?", "hot"] : ["Qu'est-ce que je risque de rater ?"],
+    n ? [`Des choix dans « ${n.nom} » ?`] : ["Ce choix change quoi ?"],
+    ["Comment me faire de l'argent ?"],
+    ["Que faire autour de moi ? Je suis à…"],
+    ["Où sont les collectibles du coin ?"]
+  ];
+  $("#chips").innerHTML = list.map(([c,k]) => `<button class="chip ${k||""}" type="button">${esc(c)}</button>`).join("");
+}
+$("#chips").addEventListener("click", e => {
+  const b = e.target.closest(".chip"); if(!b) return;
+  const t = b.textContent;
+  if(t.endsWith("…")){ qEl.value = t.replace(/…$/, " "); autosize(); qEl.focus(); }
+  else ask(t);
+});
+
+function rules(){
+  const ch = P.chap==="6" ? "histoire terminée (aucune restriction de spoiler)" : "chapitre " + P.chap + " (" + (CH_NAMES[P.chap]||"") + ")";
+  const index = KB.map(f => `- ${f.id} [${f.cat}, ch.${f.chap||"tous"}] ${f.titre}`).join("\n");
+  return `Tu es LE FIXER, le copilote de Nico pour GTA VI (PS5/Xbox, sorti le 19/11/2026). Il joue manette en main et te lit sur son téléphone.
+
+OÙ EN EST NICO
+Progression : ${ch}. Personnage joué : ${P.perso}.
+${progressText()}
+
+RÈGLES
+- Français, ton complice et direct, comme un fixer qui connaît la ville. 1 à 6 lignes, la réponse d'abord, jamais d'intro ni de récapitulatif de la question.
+- Avant de répondre sur le jeu, appelle TOUJOURS l'outil chercher (plusieurs fois si besoin, mots-clés en français ET noms anglais du jeu), puis lire pour une fiche précise. Tu ne connais du jeu QUE ce que disent les fiches : ta mémoire date d'avant la sortie et n'est pas fiable.
+- Info absente des fiches : dis-le en une phrase, donne la meilleure piste (zone, mode Focus, attendre un appel) et renvoie vers [GTABase](https://www.gtabase.com/gta-6/map) ou [Map Genie](https://mapgenie.io/grand-theft-auto-6/maps/leonida). N'invente jamais un lieu, une récompense ou une conséquence.
+- PNJ décrit par Nico : identifie la rencontre ou la quête la plus probable (même si sa description est approximative), puis dis quoi faire, les options et la récompense. Si deux rencontres collent, cite les deux en une ligne chacune.
+- « Quoi faire maintenant » : pars de sa mission en cours, rappelle d'abord les ratables non cochés qui disparaissent bientôt (surtout avant un point de non-retour), puis propose 2-3 activités utiles à son chapitre et son perso.
+- Spoilers : une fiche au_dela_de_ta_progression=true ne doit pas être révélée. Dis seulement qu'il y a un enjeu plus tard et demande s'il veut savoir, sauf s'il l'a explicitement demandé.
+- Tiens compte du personnage : signale si une quête est réservée à Jason ou à Lucia.
+- Signale clairement ce qui est ratable ou limité dans le temps. Garde les nuances « à confirmer » / « non confirmé ».
+- Mets en **gras** les noms de missions et de lieux importants. Listes courtes avec « - » si utile, pas de tableaux, pas de titres.
+
+FICHES DISPONIBLES
+${index}`;
+}
+
+const tools = [
+  { name:"chercher", description:"Recherche plein texte dans les fiches du guide GTA VI (missions, choix, rencontres au hasard, Strangers & Freaks, collectibles, secrets, argent, carte). Renvoie les 4 fiches les plus pertinentes avec leur texte complet.",
+    inputSchema:{type:"object",properties:{requete:{type:"string",description:"mots-clés, français et/ou noms anglais du jeu"}},required:["requete"]},
+    execute: ({requete}) => { const r = search(requete,4); return r.length ? r : {resultat:"aucune fiche trouvée, essaie d'autres mots-clés"}; } },
+  { name:"lire", description:"Lit une fiche complète par son id (voir l'index).",
+    inputSchema:{type:"object",properties:{id:{type:"string"}},required:["id"]},
+    execute: ({id}) => read(id) },
+  { name:"missions_du_chapitre", description:"Liste ordonnée des missions principales d'un chapitre avec leur objectif résumé, et lesquelles Nico a déjà cochées.",
+    inputSchema:{type:"object",properties:{chapitre:{type:"integer",minimum:1,maximum:5}},required:["chapitre"]},
+    execute: ({chapitre}) => {
+      if(+chapitre > prog()) return {au_dela_de_ta_progression:true, note:"Chapitre pas encore atteint : ne rien révéler sans demander."};
+      const d = doneSet();
+      return MISSIONS.filter(m => m.ch===+chapitre).map(m => ({n:m.n, nom:m.nom, objectif:m.obj, faite:d.has(m.id), point_de_non_retour:PNR.has(m.id)}));
+    } }
+];
+
+function localAnswer(q){
+  const r = search(q,2);
+  if(!r.length) return "Rien dans ma base là-dessus pour l'instant. Regarde la carte : [GTABase](https://www.gtabase.com/gta-6/map) ou [Map Genie](https://mapgenie.io/grand-theft-auto-6/maps/leonida).";
+  return "_Mode hors-ligne (Claude n'est pas autorisé sur cette page) : voici les fiches les plus proches._\n" +
+    r.map(f => `**${f.titre}**\n` + (f.au_dela_de_ta_progression ? "Plus loin dans l'histoire, je garde ça pour plus tard (onglet Guide pour l'afficher)." : f.texte)).join("\n");
+}
+
+function setBusy(b){
+  busy = b;
+  const s = $("#send");
+  s.classList.toggle("stop", b);
+  s.textContent = b ? "■" : "➤";
+  s.setAttribute("aria-label", b ? "Arrêter" : "Envoyer");
+}
+
+async function ask(text){
+  text = (text||"").trim();
+  if(!text || busy) return;
+  if(!history.length) chatEl.innerHTML = "";
+  setBusy(true);
+  history.push({role:"user", content:text});
+  bubble("user", text);
+  qEl.value = ""; autosize();
+  const out = bubble("assistant", "");
+  out.classList.add("thinking"); out.textContent = "Le Fixer réfléchit";
+  let answer = "", isErr = false;
+  try{
+    if(!sample) throw {code:"local"};
+    const msgs = history.slice(-12);
+    while(msgs.length && msgs[0].role!=="user") msgs.shift();
+    const input = [{role:"user", content: rules()}, {role:"assistant", content:"Compris. J'écoute."}, ...msgs];
+    ctl = new AbortController();
+    const res = await sample(input, {
+      tools, cache:false, modelTier: P.tier==="default" ? "default" : "quick", signal: ctl.signal,
+      onText: ({text}) => { out.classList.remove("thinking"); setBot(out, text); scrollChat(); }
+    });
+    answer = res.text || "";
+    if(res.truncated) answer += "\n_(Réponse coupée, demande la suite.)_";
+  }catch(e){
+    const code = e && e.code;
+    if(code==="local"){ answer = localAnswer(text); }
+    else if(code==="not_granted"){ sample = null; answer = localAnswer(text); }
+    else if(code==="cancelled"){ answer = (e.text || "") + (e.text ? "\n" : "") + "_(Arrêté.)_"; }
+    else if(code==="rate_limited"){ answer = "Trop de questions d'un coup. Attends quelques secondes et renvoie."; isErr = true; }
+    else { answer = (e && e.text) || "La connexion a lâché. Renvoie ta question."; isErr = !(e && e.text); }
+  }
+  ctl = null;
+  out.classList.remove("thinking");
+  out.classList.toggle("err", isErr);
+  answer = answer.replace(/(^|\n)_([^_\n]+)_(?=\n|$)/g, "$1$2");
+  setBot(out, answer, !isErr);
+  if(isErr){ history.pop(); } else { history.push({role:"assistant", content:answer}); }
+  store.set("history", history.slice(-40));
+  setBusy(false);
+  scrollChat();
+  if(!isErr && P.autoTts && tts) speak(answer);
+}
+
+/* ---------- voix ---------- */
+let speakingBtn = null;
+function speak(text, btn){
+  if(!tts) return;
+  if(speakingBtn && speakingBtn===btn){ tts.stop(); return; }
+  if(speakingBtn){ speakingBtn.textContent = "▶ Écouter"; speakingBtn.classList.remove("on"); }
+  speakingBtn = btn || null;
+  if(btn){ btn.textContent = "■ Stop"; btn.classList.add("on"); }
+  tts.speak(plain(text).slice(0,2000), {language:"fr"}).catch(err => {
+    if(err && err.code==="not_granted"){ tts = null; $("#ttsRow").hidden = true; }
+  }).finally(() => { if(btn){ btn.textContent = "▶ Écouter"; btn.classList.remove("on"); } if(speakingBtn===btn) speakingBtn = null; });
+}
+
+/* ---------- saisie ---------- */
+function autosize(){ qEl.style.height = "auto"; qEl.style.height = Math.min(qEl.scrollHeight,120)+"px"; }
+qEl.addEventListener("input", autosize);
+qEl.addEventListener("keydown", e => { if(e.key==="Enter" && !e.shiftKey && !e.isComposing){ e.preventDefault(); ask(qEl.value); }});
+$("#f").addEventListener("submit", e => { e.preventDefault(); if(busy){ ctl && ctl.abort(); } else ask(qEl.value); });
+
+const mic = $("#mic");
+let listening = false, base = "";
+mic.addEventListener("click", () => {
+  if(!dict) return;
+  if(listening){ dict.stop().catch(()=>{}); return; }
+  base = qEl.value ? qEl.value.trimEnd() + " " : "";
+  dict.start().catch(err => { if(err && err.code==="not_granted"){ mic.hidden = true; } });
+});
+
+/* ---------- vue progression ---------- */
+function renderProg(){
+  const el = $("#progScroll"), d = doneSet(), c = new Set(P.checks), ch = prog();
+  const total = MISSIONS.length, nd = P.done.length, n = nextMission();
+  const pc = pendingChecks();
+  let h = `<div class="h2">Où j'en suis</div>
+    <p class="hint">Tape « J'en suis là » sur la mission que tu joues : tout ce qui précède est coché et le Fixer adapte ses conseils et ses spoilers.</p>
+    <div class="cnt">${nd} / ${total} missions principales${n ? " · prochaine : " + esc(n.nom) : ""}</div>
+    <div class="bar"><i style="width:${total ? Math.round(nd/total*100) : 0}%"></i></div>`;
+  if(pc.length){
+    h += `<div class="alert"><b>À ne pas rater</b><ul>${pc.map(x => `<li>${esc(x.t)}${x.before ? ` <span style="color:var(--mut)">avant ${esc((MISSIONS.find(m=>m.id===x.before)||{}).nom||"")}</span>` : ""}</li>`).join("")}</ul></div>`;
+  }
+  for(let k=1;k<=5;k++){
+    const ms = MISSIONS.filter(m => m.ch===k);
+    const dk = ms.filter(m => d.has(m.id)).length;
+    const locked = k > ch && dk===0 && !(n && n.ch===k);
+    const open = n ? n.ch===k : k===5;
+    const cks = CHECKS.filter(x => x.ch===k);
+    h += `<details class="ch" ${open?"open":""}><summary><span class="chn">${k}</span><span class="cht">${locked ? "Chapitre " + k : esc(CH_NAMES[k])}<small>${locked ? "Pas encore atteint, titres masqués" : ms.length + " missions"}</small></span><span class="cnt">${dk}/${ms.length}</span></summary>`;
+    for(const m of ms){
+      const cur = n && n.id===m.id;
+      h += `<div class="mrow ${d.has(m.id)?"done":""} ${cur?"cur":""} ${PNR.has(m.id)&&!locked?"pnr":""}">
+        <button type="button" class="box ${d.has(m.id)?"on":""}" data-done="${m.id}" aria-label="Mission ${esc(locked?m.n:m.nom)} terminée">${d.has(m.id)?"✓":""}</button>
+        <span class="mnum">${m.n}</span><span class="mname">${locked ? "•••••••" : esc(m.nom)}</span>
+        <button type="button" class="here" data-here="${m.id}">${cur ? "En cours" : "J'en suis là"}</button></div>`;
+    }
+    if(cks.length && !locked){
+      h += `<div class="mrow" style="color:var(--sun);font-size:12px;text-transform:uppercase;letter-spacing:.06em">Ratables et rappels</div>`;
+      for(const x of cks){
+        const gone = checkGone(x) && !c.has(x.id);
+        h += `<div class="crow"><button type="button" class="box ${c.has(x.id)?"on":""}" data-check="${x.id}" aria-label="${esc(x.t)} fait">${c.has(x.id)?"✓":""}</button>
+          <span class="mname" style="${gone?"color:var(--mut);text-decoration:line-through":""}">${esc(x.t)}<small>${gone ? "Plus disponible" : esc(x.d)}</small></span></div>`;
+      }
+    }
+    h += `</details>`;
+  }
+  h += `<div class="sync">${esc(syncNote)}</div>`;
+  const st = el.scrollTop; el.innerHTML = h; el.scrollTop = st;
+}
+$("#progScroll").addEventListener("click", e => {
+  const b = e.target.closest("button"); if(!b) return;
+  if(b.dataset.here) setHere(b.dataset.here);
+  else if(b.dataset.done) toggleDone(b.dataset.done);
+  else if(b.dataset.check){
+    const c = new Set(P.checks); c.has(b.dataset.check) ? c.delete(b.dataset.check) : c.add(b.dataset.check);
+    P.checks = [...c]; save(); refreshViews();
+  }
+});
+
+/* ---------- vue guide ---------- */
+let gCat = "Tout", revealed = new Set();
+function renderCats(){
+  const cats = ["Tout", ...new Set(KB.map(f => f.cat))];
+  $("#cats").innerHTML = cats.map(c => `<button type="button" class="chip ${c===gCat?"sel":""}" data-cat="${esc(c)}">${esc(c)}</button>`).join("");
+}
+function renderCards(){
+  const q = $("#gq").value.trim();
+  let list = q ? score(q).map(r => r.f) : KB.slice();
+  if(gCat !== "Tout") list = list.filter(f => f.cat===gCat);
+  if(!list.length){ $("#cards").innerHTML = `<div class="empty">Rien trouvé. Essaie un autre mot, ou demande au Fixer.</div>`; return; }
+  $("#cards").innerHTML = list.map(f => {
+    const lock = f.chap > prog() && !revealed.has(f.id);
+    return `<article class="card ${lock?"lock":""}">
+      <div class="meta">${esc(f.cat)} · ${f.chap ? "ch." + f.chap : "tout le jeu"}</div>
+      <h3>${lock ? "Fiche du chapitre " + f.chap : esc(f.titre)}</h3>
+      <div class="tx">${esc(f.texte)}</div>
+      ${lock ? `<p class="spoil">Spoiler : tu n'es pas encore au chapitre ${f.chap}.</p>` : ""}
+      <div class="acts">
+        ${lock ? `<button type="button" class="mini" data-reveal="${f.id}">Afficher quand même</button>`
+               : `<button type="button" class="mini" data-ask="${f.id}">Demander au Fixer</button>` + MAPS.map(([n,u]) => `<a class="mini" href="${u}" target="_blank" rel="noopener">Carte ${n}</a>`).join("")}
+      </div></article>`;
+  }).join("");
+}
+$("#cats").addEventListener("click", e => { const b = e.target.closest("[data-cat]"); if(!b) return; gCat = b.dataset.cat; renderCats(); renderCards(); });
+$("#gq").addEventListener("input", renderCards);
+$("#cards").addEventListener("click", e => {
+  const b = e.target.closest("button"); if(!b) return;
+  if(b.dataset.reveal){ revealed.add(b.dataset.reveal); renderCards(); }
+  if(b.dataset.ask){ const f = KB.find(k => k.id===b.dataset.ask); show("chat"); ask(`Résume-moi l'essentiel de « ${f.titre} » pour ma partie.`); }
+});
+
+/* ---------- navigation et réglages ---------- */
+let view = "chat";
+function show(v){
+  view = v;
+  ["chat","prog","guide"].forEach(k => { $("#v-"+k).hidden = k!==v; });
+  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("sel", b.dataset.v===v));
+  if(v==="prog") renderProg();
+  if(v==="guide"){ renderCats(); renderCards(); }
+  store.set("view", v);
+}
+document.querySelector("nav").addEventListener("click", e => { const b = e.target.closest("button"); if(b) show(b.dataset.v); });
+function refreshViews(){ chips(); if(!history.length) welcome(); if(view==="prog") renderProg(); if(view==="guide") renderCards(); }
+
+function renderSet(){
+  document.querySelectorAll("#tier button").forEach(b => b.classList.toggle("sel", b.dataset.t===P.tier));
+  document.querySelectorAll("#autoTts button").forEach(b => b.classList.toggle("sel", (b.dataset.a==="1")===!!P.autoTts));
+}
+$("#openSet").onclick = () => { renderSet(); $("#confirmProg").hidden = true; $("#sheet").hidden = false; };
+$("#closeSet").onclick = () => { $("#sheet").hidden = true; };
+$("#sheet").addEventListener("click", e => { if(e.target.id==="sheet") $("#sheet").hidden = true; });
+$("#tier").onclick = e => { const b = e.target.closest("button"); if(!b) return; P.tier = b.dataset.t; save(); renderSet(); };
+$("#autoTts").onclick = e => { const b = e.target.closest("button"); if(!b) return; P.autoTts = b.dataset.a==="1"; save(); renderSet(); };
+$("#resetChat").onclick = () => { history = []; store.set("history", []); welcome(); $("#sheet").hidden = true; show("chat"); };
+let armed = false;
+$("#resetProg").onclick = () => {
+  if(!armed){ armed = true; $("#confirmProg").hidden = false; setTimeout(() => { armed = false; $("#confirmProg").hidden = true; }, 4000); return; }
+  armed = false; P.done = []; P.checks = []; P.cur = null; P.chap = "1"; save(); applyHeader(); refreshViews(); $("#sheet").hidden = true;
+};
+
+/* ---------- démarrage ---------- */
+Promise.all([
+  fetch("kb.json").then(r => r.json()).catch(() => []),
+  fetch("missions.json").then(r => r.json()).catch(() => [])
+]).then(([k, m]) => {
+  KB = k; MISSIONS = m; buildIndex();
+  applyHeader(); chips(); welcome();
+  show(store.get("view","chat"));
+});
+applyHeader(); chips(); welcome();
+
+if(window.claude && claude.use){
+  claude.use("sample").then(s => { if(s) sample = s; }).catch(()=>{});
+  claude.use("tts").then(t => {
+    if(!t) return;
+    tts = t; $("#ttsRow").hidden = false;
+    if(history.length) welcome();
+  }).catch(()=>{});
+  claude.use("dictation").then(d => {
+    if(!d) return;
+    dict = d; mic.hidden = false;
+    d.onPartial(({text}) => { qEl.value = base + text; autosize(); });
+    d.onFinal(({text}) => { base += text + " "; qEl.value = base; autosize(); });
+    d.onState(({state}) => {
+      listening = state==="listening"; mic.classList.toggle("on", listening);
+      if(!listening && qEl.value.trim()) ask(qEl.value);
+    });
+  }).catch(()=>{});
+  Promise.all([claude.use("db"), claude.use("user")]).then(async ([d, u]) => {
+    if(!d || !u) return;
+    const id = await u.id(); if(!id) return;
+    db = d; docRef = db.doc("data/users/" + id + "/progress");
+    const timer = setTimeout(() => { syncNote = "Synchro lente, progression gardée sur cet appareil."; }, 10000);
+    try{
+      const snap = await docRef.get(); clearTimeout(timer);
+      const remote = snap.exists ? snap.data() : null;
+      if(remote && (remote.updatedAt||0) > (P.updatedAt||0)){ Object.assign(P, remote); store.set("p", P); applyHeader(); refreshViews(); }
+      else if(P.updatedAt){ save(); }
+      syncNote = "Progression synchronisée sur ton compte Claude.";
+      if(view==="prog") renderProg();
+    }catch(e){ clearTimeout(timer); syncNote = "Synchro indisponible, progression gardée sur cet appareil."; docRef = null; }
+  }).catch(()=>{});
+}
+})();
+</script>
