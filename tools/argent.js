@@ -4,10 +4,10 @@
 // [type, nom, x, y (poster affiché 1461x2000), chap, fiche, description, approx, valeur, liste]
 module.exports = [
  // ---- Cash / butin
- ["cash","Lames du plancher de Jason",848,1686,1,"collectibles-ch1-maison","Cache sous une planche de la chambre. Perdue avec la maison à la fin du ch.1 : dépense ou dépose ce cash avant.",1,"Ton cash caché"],
+ ["cash","Lames du plancher de Jason",849,1598,1,"collectibles-ch1-maison","Cache sous une planche de la chambre. Perdue avec la maison à la fin du ch.1 : dépense ou dépose ce cash avant.",0,"Ton cash caché"],
  ["cash","Entrepôt de l'ours en peluche (deal qui a mal tourné)",858,1318,1,"argent-methodes","Entrepôt entre Southside et Hamlet, van à peluches devant. Tout le monde est déjà mort : enfonce la porte, prends le sac, puis ouvre le rideau arrière pour un second van. Coffre du bureau : carte Leroy Rook.",1,"10 000–20 000 $ en cash et drogue"],
  ["cash","Avant-poste de recherche sur les crabes",738,1482,1,"argent-methodes","Sud-ouest de Pelican Valley. Allume le courant sur le mur de la maison centrale, mot de passe CLEAVES sur le plancher, coffre 0072, porte du ponton 0212. SMG Crabshack VF5 et sac de billets marqués.",1,"≈ 1 070 $ + 10 000 $ en billets marqués"],
- ["cash","Colis perdus de Donnie",842,1610,1,"ch1-optionnels","Quatre zones au nord de Key Lento (dont la zone de loisirs, un colis coincé dans un arbre près de la plage). Revends à Donnie, mieux payé que Brian.",1,"≈ 2 700–3 400 $"],
+ ["cash","Colis perdus de Donnie",759,1574,1,"ch1-optionnels","Quatre zones au nord de Key Lento (dont la zone de loisirs, un colis coincé dans un arbre près de la plage). Revends à Donnie, mieux payé que Brian.",0,"≈ 2 700–3 400 $"],
  ["cash","Portefeuille du noyé (à confirmer)",1092,652,0,"re-supplementaires","Un mort sur la plage de Waning Sands, le portefeuille à côté. Une seule source.",1,"≈ 1 200 $"],
  // ---- Opérations de gangs (39)
  ["gang","Exotic Animals Front (Three Sheets Liquor)",841,1636,1,"re-keys","Arrière-boutique du magasin d'alcool, côté est de la grand-rue de Key Lento. Fais parler le perroquet (« generator ») : cash dans la grille blanche près du générateur. Coffre dans l'arrière-salle.",0,"≈ 1 300 $ (grille) + 900–1 300 $ (coffre)"],

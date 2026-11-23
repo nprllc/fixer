@@ -747,8 +747,8 @@ const TYPES = {
 const MONEY = ["cash","gang","banque","bijou","receleur"];
 const GROUPS = [["Argent", MONEY], ["Histoire et quêtes", ["quete","mission","rencontre"]], ["Exploration", ["secret","meditation","activite","lieu"]]];
 const HOMES = {
-  1:{n:"Maison de Jason", x:848, y:1686, d:"Ta planque du chapitre 1 à Key Lento. Perdue après Tourist Trap : vide le cash du plancher avant."},
-  2:{n:"Starlet Motel", x:494, y:712, d:"Ta planque du chapitre 2, en bordure est de Port Gellhorn (position approximative). Perdue pour de bon après Checking Out.", a:1},
+  1:{n:"Maison de Jason", x:849, y:1598, d:"Ta planque du chapitre 1 à Key Lento. Perdue après Tourist Trap : vide le cash du plancher avant."},
+  2:{n:"Starlet Motel", x:467, y:735, d:"Ta planque du chapitre 2, à Port Gellhorn. Perdue pour de bon après Checking Out."},
   3:{n:"Vice City", x:985, y:1045, d:"Au chapitre 3 tu bascules sur Vice City. Ta nouvelle planque n'est pas encore dans ma base : dis-moi où tu dors, je la note.", a:1, noHome:1}
 };
 const homeFor = () => { const c = +P.chap; return HOMES[c >= 3 ? 3 : c] || HOMES[1]; };
