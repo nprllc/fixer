@@ -148,7 +148,15 @@ nav button.sel{color:var(--pink)}
 
 /* Carte : poster officiel de Leonida (hébergé par Rockstar), navigation façon appli de cartes */
 #v-map{background:#06222c;overflow:hidden}
-#lmap{position:absolute;inset:0;background:#01aac9}
+#lmap{position:absolute;inset:0;background:#86cde0}
+.maplabel{pointer-events:none}
+.maplabel span{position:absolute;transform:translate(-50%,-50%);white-space:nowrap;color:#29414c;font-weight:700;letter-spacing:.02em;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 2px #fff;display:none}
+.maplabel.lr span{display:block;font-family:var(--display);font-size:20px;letter-spacing:.12em;color:#3d5560;opacity:.75;font-weight:400}
+.maplabel.lv span{font-size:12.5px;text-transform:uppercase;letter-spacing:.06em}
+.maplabel.ln span{font-size:10.5px;font-weight:600;color:#40565f}
+#lmap.zl1 .maplabel.lv span{display:block}
+#lmap.zl2 .maplabel.ln span{display:block}
+#lmap.zl2 .maplabel.lr span{display:none}
 .mk.home{--sz:38px;background:linear-gradient(135deg,#ff4fa3,#ffb14a);border:3px solid #fff;box-shadow:0 0 0 4px rgba(255,79,163,.35),0 6px 18px rgba(0,0,0,.5)}
 .mk.home svg{width:56%;height:56%}
 #lmap.z1 .mk.home{--sz:30px}
@@ -710,9 +718,8 @@ mic.addEventListener("click", () => {
 });
 
 /* ---------- carte ---------- */
-/* Fond : le poster officiel « The Great State of Leonida », servi par Rockstar (pas copié ici).
+/* Coordonnées en pixels du poster officiel (2805 x 3840), même géométrie que la carte en jeu.
    Coordonnées des points en pixels du poster (2805 x 3840). */
-const MAP_IMG = "https://www.rockstargames.com/VI/_next/static/media/Leonida_Map_Poster.08ir77j-.26ny.jpg";
 const MAP_W = 2805, MAP_H = 3840;
 const G = {
   cash:'<path d="M3 7h18v10H3z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.6" fill="currentColor"/><path d="M6.5 9.8v4.4M17.5 9.8v4.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
@@ -902,52 +909,71 @@ function openMap(){
   document.head.appendChild(s);
 }
 
-/* Tuiles dessinées dans le téléphone à partir du poster (chargé une seule fois depuis Rockstar).
-   Seules les tuiles visibles sont peintes : zoom et glisser restent fluides même très près. */
-const POSTER = new Image(), MASK = new Image();
-let posterOk = false, maskOk = false, posterLayer = null;
-POSTER.decoding = "async";
-function loadPoster(){
-  if(POSTER.src) return;
-  POSTER.onload = () => { posterOk = true; if(posterLayer) posterLayer.redraw(); };
-  POSTER.onerror = () => {
-    $("#lmap").classList.add("noimg"); $("#mnote").hidden = false;
-    $("#mnote").innerHTML = `La carte officielle ne peut pas s'afficher ici. Les points restent utilisables. Carte complète : <a href="https://nprllc.github.io/fixer/" target="_blank" rel="noopener">nprllc.github.io/fixer</a>`;
-  };
-  MASK.onload = () => { maskOk = true; if(posterLayer && posterOk) posterLayer.redraw(); };
-  MASK.src = "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%202805%203840'%20width='702'%20height='960'%20preserveAspectRatio='none'%3E%3Cfilter%20id='b'%20x='-10%'%20y='-10%'%20width='120%'%20height='120%'%3E%3CfeGaussianBlur%20stdDeviation='34'/%3E%3C/filter%3E%3Cpolygon%20points='691,119%202684,119%202684,2957%201891,2957%201891,3715%20119,3715%20119,768%20691,768'%20fill='white'%20filter='url(%23b)'/%3E%3C/svg%3E";
-  POSTER.src = MAP_IMG;
+/* Fond de carte vectoriel maison (basemap.json) : côtes, terre, forêts, villes, plages, routes,
+   vectorisés depuis la géographie officielle de Leonida. Dessiné en tuiles dans le téléphone : net à tous les zooms. */
+let BASE = null, baseLayer = null;
+const BCOL = {water:"#86cde0", land:"#bcdcab", forest:"#97c48d", urban:"#eef0f2", block:"#d7dde3", sand:"#f3e7bf", road:"#ffe7a3", casing:"#d9b75f", coast:"#6db8cc"};
+function loadBase(){
+  if(BASE) return Promise.resolve(BASE);
+  return fetch("basemap.json").then(r => r.json()).then(b => { BASE = b; if(baseLayer) baseLayer.redraw(); return b; }).catch(() => null);
 }
-const PosterLayer = () => L.GridLayer.extend({
+const VectorLayer = () => L.GridLayer.extend({
   createTile(c){
     const tile = document.createElement("canvas"), dpr = Math.min(window.devicePixelRatio || 1, 2), T = 256;
     tile.width = tile.height = T * dpr;
-    if(!posterOk) return tile;
-    const s = Math.pow(2, c.z), sx = c.x * T / s, sy = c.y * T / s, sw = T / s;
-    const x0 = Math.max(0, sx), y0 = Math.max(0, sy), x1 = Math.min(MAP_W, sx + sw), y1 = Math.min(MAP_H, sy + sw);
-    if(x1 <= x0 || y1 <= y0) return tile;
-    const k = tile.width / sw, ctx = tile.getContext("2d");
-    ctx.imageSmoothingQuality = "high";
-    ctx.drawImage(POSTER, x0, y0, x1 - x0, y1 - y0, (x0 - sx) * k, (y0 - sy) * k, (x1 - x0) * k, (y1 - y0) * k);
-    if(maskOk){ ctx.globalCompositeOperation = "destination-in"; const q = 702 / MAP_W;
-      ctx.drawImage(MASK, x0 * q, y0 * q, (x1 - x0) * q, (y1 - y0) * q, (x0 - sx) * k, (y0 - sy) * k, (x1 - x0) * k, (y1 - y0) * k); }
+    if(!BASE) return tile;
+    const s = Math.pow(2, c.z), sx = c.x * T / s, sy = c.y * T / s, sw = T / s, k = tile.width / sw;
+    const CE = BASE.cell, UP = BASE.up, ctx = tile.getContext("2d");
+    const gx0 = Math.max(0, Math.floor((sx - 4) / CE)), gx1 = Math.floor((sx + sw + 4) / CE);
+    const gy0 = Math.max(0, Math.floor((sy - 4) / CE)), gy1 = Math.floor((sy + sw + 4) / CE);
+    const cells = [];
+    for(let gy = gy0; gy <= gy1; gy++) for(let gx = gx0; gx <= gx1; gx++){ const cl = BASE.cells[gx + "," + gy]; if(cl) cells.push([gx, gy, cl]); }
+    if(!cells.length) return tile;
+    const paint = (li, fill, stroke, lw) => {
+      for(const [gx, gy, cl] of cells){
+        const rings = cl[li]; if(!rings || !rings.length) continue;
+        ctx.setTransform(k / UP, 0, 0, k / UP, (gx * CE - sx) * k, (gy * CE - sy) * k);
+        ctx.beginPath();
+        for(const r of rings){ ctx.moveTo(r[0], r[1]); for(let q = 2; q < r.length; q += 2) ctx.lineTo(r[q], r[q+1]); ctx.closePath(); }
+        if(fill){ ctx.fillStyle = fill; ctx.fill("evenodd"); }
+        if(stroke){ ctx.strokeStyle = stroke; ctx.lineWidth = lw * UP / k * dpr; ctx.stroke(); }
+      }
+    };
+    ctx.lineJoin = "round";
+    paint(0, BCOL.land, BCOL.coast, .9);
+    paint(1, BCOL.forest, null);
+    paint(3, BCOL.sand, null);
+    paint(2, BCOL.urban, null);
+    if(s > .25) paint(5, BCOL.block, null);
+    if(s > .3) paint(4, null, BCOL.casing, 1.6);
+    paint(4, BCOL.road, null);
     return tile;
   }
 });
+/* Noms de lieux : comtés de loin, villes ensuite, quartiers et îles en zoomant. */
+let labelLayer = null;
+function buildLabels(){
+  labelLayer = L.layerGroup().addTo(lmap);
+  for(const p of POIS.filter(p => p.t==="lieu")){
+    const cls = p.k==="r" ? "lr" : p.k==="v" ? "lv" : "ln";
+    L.marker(ll(p), {interactive:false, keyboard:false, icon:L.divIcon({className:"maplabel " + cls, html:"<span>" + esc(p.n.replace(" (aéroport)","")) + "</span>", iconSize:[0,0]})}).addTo(labelLayer);
+  }
+}
 
 function initMap(){
   const bounds = [[-MAP_H, 0], [0, MAP_W]];
   lmap = L.map("lmap", {crs:L.CRS.Simple, zoomSnap:0, zoomDelta:.75, wheelPxPerZoomLevel:110, fadeAnimation:false, markerZoomAnimation:true, wheelDebounceTime:20, inertiaDeceleration:2400, inertiaMaxSpeed:2200, easeLinearity:.25,
     maxBounds:L.latLngBounds(bounds).pad(.8), maxBoundsViscosity:.6, zoomControl:false, attributionControl:true, bounceAtZoomLimits:false});
   lmap.attributionControl.setPrefix(false);
-  loadPoster();
-  posterLayer = new (PosterLayer())({tileSize:256, minZoom:-6, maxZoom:4, bounds:L.latLngBounds(bounds), keepBuffer:4, updateWhenZooming:false, updateWhenIdle:false, noWrap:true, attribution:"Carte © Rockstar Games"}).addTo(lmap);
-  const fit = () => { lmap.invalidateSize(); lmap.setMinZoom(-8); lmap.fitBounds(bounds, {animate:false}); fitZoom = lmap.getZoom(); lmap.setMinZoom(fitZoom - .4); lmap.setMaxZoom(3.5); tier(); };
-  const tier = () => { const z = lmap.getZoom() - fitZoom, el = $("#lmap"); el.classList.toggle("z1", z < .7); el.classList.toggle("z2", z >= .7 && z < 1.5); };
+  loadBase();
+  baseLayer = new (VectorLayer())({tileSize:256, minZoom:-6, maxZoom:6, bounds:L.latLngBounds(bounds), keepBuffer:6, updateWhenZooming:false, updateWhenIdle:false, noWrap:true, attribution:"Géographie : carte officielle de Leonida (Rockstar Games)"}).addTo(lmap);
+  const island = [[-3606, 309], [-337, 2486]];
+  const fit = () => { lmap.invalidateSize(); lmap.setMinZoom(-8); lmap.fitBounds(island, {animate:false, padding:[8,8]}); fitZoom = lmap.getZoom(); lmap.setMinZoom(fitZoom - .6); lmap.setMaxZoom(fitZoom + 6); tier(); };
+  const tier = () => { const z = lmap.getZoom() - fitZoom, el = $("#lmap"); el.classList.toggle("z1", z < .7); el.classList.toggle("z2", z >= .7 && z < 1.5); el.classList.toggle("zl1", z >= .9); el.classList.toggle("zl2", z >= 1.9); };
   lmap.on("zoomend", tier);
   fit(); requestAnimationFrame(fit);
   lmap.on("click", () => { $("#mres").hidden = true; if(!$("#mlayers").hidden) $("#mlayers").hidden = true; else if(selId) unselect(); else if(hlIds.length) clearHighlight(); });
-  buildMarkers(); placeHome();
+  buildLabels(); buildMarkers(); placeHome();
   if(hlWaiting) requestAnimationFrame(applyHighlight);
   else requestAnimationFrame(() => goHome(true));
 }
@@ -970,7 +996,7 @@ $("#mlayers").addEventListener("click", e => {
   if("hidedone" in b.dataset){ hideDone = !hideDone; store.set("mhidedone", hideDone); if(lmap) applyLayers(); renderLayers(); }
 });
 $("#mhome").onclick = () => { if(lmap) goHome(false); };
-$("#mfit").onclick = () => { if(lmap) lmap.flyToBounds([[-MAP_H,0],[0,MAP_W]], {duration:.6}); };
+$("#mfit").onclick = () => { if(lmap) lmap.flyToBounds([[-3606,309],[-337,2486]], {duration:.6, padding:[8,8]}); };
 $("#mq").addEventListener("input", () => {
   if(!$("#mq").value.trim()){ $("#mres").hidden = true; return; }
   const r = mapSearch($("#mq").value).filter(p => showLater || !later(p)).slice(0, 8);
