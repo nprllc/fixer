@@ -15,3 +15,8 @@ Publié comme artifact claude.ai : https://claude.ai/artifact/To7um7NfK1wfhcmh5u
 ## Règles de contenu
 - Les faits du jeu sont recoupés entre plusieurs sources et réécrits ; aucun guide n'est copié.
 - Les points incertains restent marqués « à confirmer ».
+
+## Version publique
+
+- Site (GitHub Pages) : https://nprllc.github.io/fixer/ — Guide, missions et recherche dans les fiches. Sans claude.ai, pas de chat IA ni de sync : la progression reste dans le navigateur.
+- Version complète (chat IA, progression synchronisée) : l'artifact claude.ai.
