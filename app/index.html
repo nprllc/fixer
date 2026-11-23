@@ -286,10 +286,10 @@ nav button.sel{color:var(--pink)}
 <div id="sheet" hidden>
   <div class="in" role="dialog" aria-label="Réglages">
     <div class="h2">Réglages</div>
-    <div class="set"><label>Où j'en suis<small>Le Fixer le met à jour tout seul quand tu lui dis où tu en es. Ici, c'est pour corriger à la main.</small></label>
+    <div class="set"><label>Où j'en suis<small>Le Fixer le met à jour tout seul quand tu lui dis où tu en es. Ici, c’est pour corriger à la main.</small></label>
       <div style="display:flex;gap:6px">
         <select id="chap" aria-label="Chapitre en cours"><option value="1">Chap. 1</option><option value="2">Chap. 2</option><option value="3">Chap. 3</option><option value="4">Chap. 4</option><option value="5">Chap. 5</option><option value="6">Fini</option></select>
-        <select id="perso" aria-label="Personnage joué"><option value="Jason">Jason</option><option value="Lucia">Lucia</option></select>
+
       </div></div>
     <div class="set"><label>Cerveau<small>Rapide : réponse en quelques secondes. Réfléchi : plus fiable, plus lent.</small></label>
       <div class="seg" id="tier"><button type="button" data-t="quick">Rapide</button><button type="button" data-t="default">Réfléchi</button></div></div>
@@ -306,7 +306,7 @@ nav button.sel{color:var(--pink)}
 (function(){
 "use strict";
 const $ = s => document.querySelector(s);
-const chatEl = $("#chat"), chatScroll = $("#chatScroll"), qEl = $("#q"), chapEl = $("#chap"), persoEl = $("#perso");
+const chatEl = $("#chat"), chatScroll = $("#chatScroll"), qEl = $("#q"), chapEl = $("#chap");
 const CH_NAMES = {1:"Just Like Paradise",2:"Paradise Lost",3:"Tits Ass Drug Money",4:"Vice City, Baby",5:"Top of the World, Ma"};
 const MAPS = [["GTABase","https://www.gtabase.com/gta-6/map"],["Map Genie","https://mapgenie.io/grand-theft-auto-6/maps/leonida"]];
 
@@ -337,7 +337,7 @@ const PNR = new Set(["m1-20","m2-11","m4-23","m5-6"]);
 
 let POIS = [], KB = [], MISSIONS = [], history = [], busy = false, ctl = null;
 let sample = null, dict = null, tts = null, db = null, docRef = null;
-let P = {done:[], checks:[], found:[], cur:null, chap:"1", perso:"Jason", tier:"quick", autoTts:false};
+let P = {done:[], checks:[], found:[], cur:null, chap:"1", tier:"quick", autoTts:false};
 
 /* ---------- stockage ---------- */
 const store = {
@@ -345,7 +345,7 @@ const store = {
   set(k,v){ try{ localStorage.setItem("fixer:"+k, JSON.stringify(v)); }catch(e){} }
 };
 Object.assign(P, store.get("p", {}));
-if(!store.get("p", null)){ P.chap = store.get("chap","1"); P.perso = store.get("perso","Jason"); }
+if(!store.get("p", null)){ P.chap = store.get("chap","1"); }
 history = store.get("history", []);
 let syncNote = "Progression gardée sur cet appareil.";
 let saveTimer = null;
@@ -355,18 +355,17 @@ function save(){
   if(!docRef) return;
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
-    const {done,checks,found,cur,chap,perso,tier,autoTts,updatedAt} = P;
-    docRef.set({done,checks,found:found||[],cur,chap,perso,tier,autoTts,updatedAt}).then(()=>{ syncNote = "Progression synchronisée sur ton compte Claude."; })
+    const {done,checks,found,cur,chap,tier,autoTts,updatedAt} = P;
+    docRef.set({done,checks,found:found||[],cur,chap,tier,autoTts,updatedAt}).then(()=>{ syncNote = "Progression synchronisée sur ton compte Claude."; })
       .catch(()=>{ syncNote = "Synchro indisponible, progression gardée sur cet appareil."; });
   }, 700);
 }
 function applyHeader(){
-  chapEl.value = P.chap; persoEl.value = P.perso;
+  chapEl.value = P.chap;
   const m = MISSIONS.find(x => x.id===P.cur);
-  $("#where").textContent = (P.chap==="6" ? "Histoire terminée" : m ? `Ch.${m.ch} · ${m.nom}` : `Ch.${P.chap} · ${CH_NAMES[P.chap]||""}`) + ` · ${P.perso}`;
+  $("#where").textContent = (P.chap==="6" ? "Histoire terminée" : m ? `Ch.${m.ch} · ${m.nom}` : `Ch.${P.chap} · ${CH_NAMES[P.chap]||""}`);
 }
 chapEl.onchange = () => { P.chap = chapEl.value; save(); applyHeader(); refreshViews(); };
-persoEl.onchange = () => { P.perso = persoEl.value; save(); applyHeader(); };
 
 /* ---------- recherche ---------- */
 const norm = s => (s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9' ]/g," ").replace(/'/g," ");
@@ -471,7 +470,6 @@ function findMission(q){
 }
 function progUpdate(a){
   const notes = [];
-  if(a.perso){ P.perso = a.perso; notes.push("perso : " + a.perso); }
   if(a.mission){
     const m = findMission(a.mission);
     if(!m) notes.push("mission « " + a.mission + " » introuvable dans la liste");
@@ -489,7 +487,7 @@ function progUpdate(a){
   }
   save(); applyHeader(); refreshViews();
   const n = nextMission();
-  return {fait: notes, chapitre: P.chap, perso: P.perso, prochaine_mission: P.chap==="6" ? null : (n ? n.nom : null), ratables_a_surveiller: pendingChecks().map(c => c.t)};
+  return {fait: notes, chapitre: P.chap, prochaine_mission: P.chap==="6" ? null : (n ? n.nom : null), ratables_a_surveiller: pendingChecks().map(c => c.t)};
 }
 
 /* ---------- rendu texte ---------- */
@@ -548,7 +546,7 @@ function rules(){
   return `Tu es LE FIXER, le copilote de Nico pour GTA VI (PS5/Xbox, sorti le 19/11/2026). Il joue manette en main et te lit sur son téléphone.
 
 OÙ EN EST NICO
-Progression : ${ch}. Personnage joué : ${P.perso}.
+Progression : ${ch}.
 ${progressText()}
 
 RÈGLES
@@ -556,11 +554,11 @@ RÈGLES
 - Avant de répondre sur le jeu, appelle TOUJOURS l'outil chercher (plusieurs fois si besoin, mots-clés en français ET noms anglais du jeu), puis lire pour une fiche précise. Tu ne connais du jeu QUE ce que disent les fiches : ta mémoire date d'avant la sortie et n'est pas fiable.
 - Info absente des fiches : dis-le en une phrase, donne la meilleure piste (zone, mode Focus, attendre un appel) et renvoie vers [GTABase](https://www.gtabase.com/gta-6/map) ou [Map Genie](https://mapgenie.io/grand-theft-auto-6/maps/leonida). N'invente jamais un lieu, une récompense ou une conséquence.
 - PNJ décrit par Nico : identifie la rencontre ou la quête la plus probable (même si sa description est approximative), puis dis quoi faire, les options et la récompense. Si deux rencontres collent, cite les deux en une ligne chacune.
-- « Quoi faire maintenant » : pars de sa mission en cours, rappelle d'abord les ratables non cochés qui disparaissent bientôt (surtout avant un point de non-retour), puis propose 2-3 activités utiles à son chapitre et son perso.
+- « Quoi faire maintenant » : pars de sa mission en cours, rappelle d'abord les ratables non cochés qui disparaissent bientôt (surtout avant un point de non-retour), puis propose 2-3 activités utiles à son chapitre.
 - Spoilers : une fiche au_dela_de_ta_progression=true ne doit pas être révélée. Dis seulement qu'il y a un enjeu plus tard et demande s'il veut savoir, sauf s'il l'a explicitement demandé.
-- Tiens compte du personnage : signale si une quête est réservée à Jason ou à Lucia.
+- Si une quête ou activité est réservée à Jason ou à Lucia, précise-le en passant.
 - Signale clairement ce qui est ratable ou limité dans le temps. Garde les nuances « à confirmer » / « non confirmé ».
-- Progression : Nico ne coche rien lui-même, c'est toi qui tiens son carnet. Dès qu'il dit où il en est (« je viens de finir X », « je suis à la mission Y », « je suis au chapitre 3 », « je joue Lucia », « j'ai fait Shirley », « j'ai vidé la planque de… »), appelle mettre_a_jour_progression AVANT de répondre, puis réponds en tenant compte du nouvel état. Si sa progression est inconnue et que la question en dépend, demande-lui en une phrase quelle mission il joue.
+- Progression : Nico ne coche rien lui-même, c'est toi qui tiens son carnet. Dès qu'il dit où il en est (« je viens de finir X », « je suis à la mission Y », « je suis au chapitre 3 », « j'ai fait Shirley », « j'ai vidé la planque de… »), appelle mettre_a_jour_progression AVANT de répondre, puis réponds en tenant compte du nouvel état. Si sa progression est inconnue et que la question en dépend, demande-lui en une phrase quelle mission il joue.
 - Lieux : appelle l'outil carte et donne la case du quadrillage (ex. « case K6 »). Précise quand l'emplacement est approximatif.
 - Carte : quand Nico dit « montre-moi », « sur la carte », « c'est où », « comment j'y vais », ou qu'un lieu précis l'aide à agir, appelle montrer_sur_carte : le ou les points s'allument sur sa carte. Dis en une ligne ce qui est allumé (nom + case). Plusieurs points possibles (ex. toutes les banques braquables) : passe leurs noms exacts ou une recherche.
 - Mets en **gras** les noms de missions et de lieux importants. Listes courtes avec « - » si utile, pas de tableaux, pas de titres.
@@ -584,7 +582,6 @@ const tools = [
       mission:{type:"string",description:"nom (anglais) ou id d'une mission principale, ex. « Tourist Trap » ou m1-20"},
       etat:{type:"string",enum:["en_cours","terminee"],description:"en_cours : il joue cette mission ; terminee : il vient de la finir"},
       chapitre:{type:"integer",minimum:1,maximum:6,description:"6 = histoire finie"},
-      perso:{type:"string",enum:["Jason","Lucia"]},
       ratable_fait:{type:"string",description:"intitulé d'un ratable ou rappel qu'il a fait (ex. Shirley, magazines, épargne)"},
       point_fait:{type:"string",description:"nom d'un point de la carte qu'il a fait ou vidé (planque, coffre, braquage…)"}
     }},
