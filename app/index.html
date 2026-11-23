@@ -723,7 +723,7 @@ $("#progScroll").addEventListener("click", e => {
 });
 
 /* ---------- vue guide ---------- */
-let gCat = "Tout", revealed = new Set();
+let gCat = "Tout", revealed = new Set(), gLater = false;
 function renderCats(){
   const cats = ["Tout", ...new Set(KB.map(f => f.cat))];
   $("#cats").innerHTML = cats.map(c => `<button type="button" class="chip ${c===gCat?"sel":""}" data-cat="${esc(c)}">${esc(c)}</button>`).join("");
@@ -732,7 +732,10 @@ function renderCards(){
   const q = $("#gq").value.trim();
   let list = q ? score(q).map(r => r.f) : KB.slice();
   if(gCat !== "Tout") list = list.filter(f => f.cat===gCat);
-  if(!list.length){ $("#cards").innerHTML = `<div class="empty">Rien trouvé. Essaie un autre mot, ou demande au Fixer.</div>`; return; }
+  const nLater = list.filter(f => f.chap > prog()).length;
+  if(!gLater) list = list.filter(f => !(f.chap > prog()));
+  const foot = nLater ? `<button type="button" class="mini" data-glater style="margin:4px 0 14px">${gLater ? "Masquer les fiches des chapitres suivants" : nLater + " fiche" + (nLater>1?"s":"") + " des chapitres suivants masquée" + (nLater>1?"s":"") + " · afficher"}</button>` : "";
+  if(!list.length){ $("#cards").innerHTML = `<div class="empty">Rien pour ton chapitre ici. Essaie un autre mot, ou demande au Fixer.</div>` + foot; return; }
   $("#cards").innerHTML = list.map(f => {
     const lock = f.chap > prog() && !revealed.has(f.id);
     return `<article class="card ${lock?"lock":""}">
@@ -744,13 +747,14 @@ function renderCards(){
         ${lock ? `<button type="button" class="mini" data-reveal="${f.id}">Afficher quand même</button>`
                : `<button type="button" class="mini" data-ask="${f.id}">Demander au Fixer</button>` + MAPS.map(([n,u]) => `<a class="mini" href="${u}" target="_blank" rel="noopener">Carte ${n}</a>`).join("")}
       </div></article>`;
-  }).join("");
+  }).join("") + foot;
 }
 $("#cats").addEventListener("click", e => { const b = e.target.closest("[data-cat]"); if(!b) return; gCat = b.dataset.cat; renderCats(); renderCards(); });
 $("#gq").addEventListener("input", renderCards);
 $("#cards").addEventListener("click", e => {
   const b = e.target.closest("button"); if(!b) return;
   if(b.dataset.reveal){ revealed.add(b.dataset.reveal); renderCards(); }
+  if("glater" in b.dataset){ gLater = !gLater; renderCards(); }
   if(b.dataset.ask){ const f = KB.find(k => k.id===b.dataset.ask); show("chat"); ask(`Résume-moi l'essentiel de « ${f.titre} » pour ma partie.`); }
 });
 
@@ -792,8 +796,8 @@ const TYPES = {
 const MONEY = ["cash","gang","banque","bijou","receleur"];
 const GROUPS = [["Argent", MONEY], ["Histoire et quêtes", ["quete","mission","rencontre"]], ["Exploration", ["secret","meditation","activite","lieu"]]];
 let lmap = null, fitZoom = -3, selId = null, mapRevealed = new Set(), markers = new Map(), groups = {};
-let mOn = new Set(MONEY), hideDone = false;
-try{ const s = store.get("mfilters", null); if(Array.isArray(s)) mOn = new Set(s); hideDone = !!store.get("mhidedone", false); }catch(e){}
+let mOn = new Set(MONEY), hideDone = false, showLater = false;
+try{ const s = store.get("mfilters", null); if(Array.isArray(s)) mOn = new Set(s); hideDone = !!store.get("mhidedone", false); showLater = !!store.get("mlater", false); }catch(e){}
 const ll = p => [-p.y, p.x];
 const SPOIL = new Set(["quete","mission","rencontre","secret"]);
 const later = p => (p.ch||0) > prog();
@@ -843,7 +847,7 @@ function applyLayers(){
   }
   for(const p of POIS){
     const m = markers.get(p.id), g = groups[p.t];
-    const show = p.id===selId || !(hideDone && isDone(p));
+    const show = p.id===selId || (!(hideDone && isDone(p)) && (showLater || !later(p)));
     if(show && !g.hasLayer(m)) g.addLayer(m);
     if(!show && g.hasLayer(m)) g.removeLayer(m);
   }
@@ -860,13 +864,17 @@ function renderQuick(){
     keys.map(k => `<button type="button" class="${mOn.has(k)?"":"off"}" data-mf="${k}" aria-pressed="${mOn.has(k)}"><span class="ib" style="--c:${TYPES[k].c}">${svg(k)}</span>${TYPES[k].n}</button>`).join("");
 }
 function renderLayers(){
-  const count = k => POIS.filter(p => p.t===k).length, done = k => POIS.filter(p => p.t===k && isDone(p)).length;
+  const avail = p => showLater || !later(p);
+  const count = k => POIS.filter(p => p.t===k && avail(p)).length, done = k => POIS.filter(p => p.t===k && avail(p) && isDone(p)).length;
+  const hidden = POIS.filter(p => p.t!=="lieu" && !avail(p)).length;
   $("#mlayers").innerHTML = `<div class="grab"></div><button type="button" class="x" data-close aria-label="Fermer"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
     <h4>Calques</h4>
     <div class="lpresets"><button type="button" data-preset="money">Que l'argent</button><button type="button" data-preset="all">Tout afficher</button><button type="button" data-preset="none">Tout masquer</button></div>
     ${GROUPS.map(([g, ks]) => `<h5>${g}</h5>` + ks.map(k => `<button type="button" class="lrow ${mOn.has(k)?"on":""}" data-mf="${k}" role="switch" aria-checked="${mOn.has(k)}">
       <span class="ib" style="--c:${TYPES[k].c};${k==="lieu"?"color:#0d0a14":""}">${k==="lieu" ? '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" fill="currentColor"/></svg>' : svg(k)}</span>
       <span class="nm">${TYPES[k].n}<small>${TYPES[k].s} · ${k==="lieu" ? count(k) : done(k) + "/" + count(k) + " faits"}</small></span><span class="sw"></span></button>`).join("")).join("")}
+    <h5>Anti-spoiler</h5>
+    <button type="button" class="lrow ${showLater?"on":""}" data-later role="switch" aria-checked="${showLater}"><span class="ib" style="--c:#ffb14a;color:#0d0a14">${svg("lock")}</span><span class="nm">Montrer ce qui vient après mon chapitre<small>${P.chap==="6" ? "Histoire finie : tout est visible" : (later({ch:9}) && POIS.some(p => later(p))) ? POIS.filter(p => later(p)).length + " points masqués au-delà du chapitre " + P.chap : "Rien de masqué au chapitre " + P.chap}</small></span><span class="sw"></span></button>
     <h5>Affichage</h5>
     <button type="button" class="lrow ${hideDone?"on":""}" data-hidedone role="switch" aria-checked="${hideDone}"><span class="ib" style="--c:#5be38a;color:#0d0a14"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="nm">Masquer ce que j'ai fait<small>Les points cochés « Fait » disparaissent</small></span><span class="sw"></span></button>`;
 }
@@ -952,12 +960,13 @@ $("#mlayers").addEventListener("click", e => {
   if(b.dataset.preset==="all") setFilters(Object.keys(TYPES).filter(k => k!=="lieu"));
   if(b.dataset.preset==="none") setFilters([]);
   if(b.dataset.mf){ const n = new Set(mOn); n.has(b.dataset.mf) ? n.delete(b.dataset.mf) : n.add(b.dataset.mf); setFilters(n); }
+  if("later" in b.dataset){ showLater = !showLater; store.set("mlater", showLater); if(lmap) drawPins(); renderLayers(); }
   if("hidedone" in b.dataset){ hideDone = !hideDone; store.set("mhidedone", hideDone); if(lmap) applyLayers(); renderLayers(); }
 });
 $("#mfit").onclick = () => { if(lmap) lmap.flyToBounds([[-MAP_H,0],[0,MAP_W]], {duration:.6}); };
 $("#mq").addEventListener("input", () => {
   if(!$("#mq").value.trim()){ $("#mres").hidden = true; return; }
-  const r = mapSearch($("#mq").value).slice(0, 8);
+  const r = mapSearch($("#mq").value).filter(p => showLater || !later(p)).slice(0, 8);
   $("#mres").innerHTML = r.length ? r.map(p => { const lk = locked(p);
     return `<button type="button" data-mgo="${p.id}"><span class="ib" style="--c:${lk?"#3a3148":TYPES[p.t].c};--sz:28px;${p.t==="lieu"?"color:#0d0a14":""}">${p.t==="lieu" ? '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" fill="currentColor"/></svg>' : svg(lk?"lock":p.t)}</span>
     <span class="t"><b>${esc(lk ? "Point du chapitre " + p.ch : p.n)}</b><small>${esc(TYPES[p.t].n)}${p.v && !lk ? " · " + esc(p.v) : ""}</small></span><span class="cell">${p.g}</span></button>`; }).join("")
@@ -974,7 +983,7 @@ $("#mcard").addEventListener("click", e => {
   if(b.dataset.mask){ const p = POIS.find(x => x.id===b.dataset.mask); show("chat"); ask(`Je regarde la carte, case ${p.g} : « ${p.n} ». Qu'est-ce que je dois savoir et comment je m'y prends ?`); }
   if(b.dataset.mfiche){ const f = KB.find(k => k.id===b.dataset.mfiche); gCat = "Tout"; $("#gq").value = f.titre; show("guide"); }
 });
-function drawPins(){ if(!lmap) return; for(const p of POIS) refreshMarker(p.id); }
+function drawPins(){ if(!lmap) return; for(const p of POIS) refreshMarker(p.id); applyLayers(); }
 
 /* ---------- navigation et réglages ---------- */
 let view = "chat";
