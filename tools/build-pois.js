@@ -148,12 +148,10 @@ const P = [
  ["quete","Kirk : affiche du Skunk Ape (Skeeter's)",828,1384,1,"sf-kirk","Lis l'affiche au Skeeter's bar puis appelle Kirk. Affiche aussi au Rusty Anchor de Key Lento."],
  ["quete","Kirk : effigies dans les arbres",768,1478,1,"sf-kirk","Search for Tree Effigies, à Pelican Valley.",1],
  ["quete","Kenton : boutique de plongée",812,1678,1,"sf-kenton","Icône verte KR sur le front de mer. Rachète les trésors des épaves (33 découvertes)."],
- ["quete","Moses : garage, vols de véhicules",456,728,2,"sf-moses","Livraisons répétables, très rentables en début de jeu.",1],
  ["quete","Kyle : McKittrick Farm",500,780,2,"sf-kyle","Ferme du ch.2, secteur de Port Gellhorn (position exacte à confirmer).",1],
  ["quete","Billy : Thrillbilly Mud Club",706,634,2,"sf-billy","Départ au club. Ne compte pas pour le trophée S&F."],
  ["quete","Billy : fourrière d'Ambrosia (The Impaler)",818,724,2,"sf-billy","Voler la voiture de police à la fourrière.",1],
  ["quete","Andy : Cellerica (Lucia)",948,822,3,"sf-andy","Lucia uniquement. Livraisons et trophée Road to Rehabilitation.",1],
- ["quete","Randy : point de livraison à Balsero",860,1006,3,"re-vicecity","Livre la Pegassi Tempesta intacte à Randy.",1],
  ["quete","Dodos Rising : manif devant l'Oceanarium",1082,1236,3,"sf-dodos","Point d'interrogation violet. Mission 1 : voler l'orque avec Rosebud."],
  ["quete","Dodos Rising : labo de primates",836,1212,3,"sf-dodos","Au sud de VCIA. Mission 2 : sortir un chimpanzé.",1],
  ["quete","Dodos Rising : fracking de Watson Bay",642,1398,3,"sf-dodos","Mission 3. CHOIX : sauver Steve (conseillé) ou suivre Tyler.",1],
@@ -175,7 +173,6 @@ const P = [
  ["rencontre","Lucky Dog : le chien en jet ski",826,1588,1,"re-keys","Nage seul au large 5 min, suis les aboiements. Environ 1 200 $.",1],
  ["rencontre","Vieux marin ivre (Cheeky Mutineer)",836,1648,1,"re-keys","Il demande de l'argent : suis-le jusqu'à l'eau pour le harpon Bullhead.",1],
  ["rencontre","Grand-mère voleuse (quai d'Island Dreams)",818,1670,1,"re-keys","Rattrape-la et rends le portefeuille.",1],
- ["rencontre","Perroquets (Three Sheets Liquor)",844,1664,1,"re-keys","Élimine les gardes, suis le perroquet rouge : environ 1 300 $.",1],
  ["rencontre","Shooting du triton",888,1522,1,"re-keys","Petite île des Shoeless Keys, près du piano.",1],
  ["rencontre","Van coincé avec un tigre",660,1744,1,"re-keys","Au sud de Maroon Key, carrefour du dirigeable.",1],
  ["rencontre","Recrue du M7 (armurerie Big Shots)",812,1362,1,"re-hamlet","Libère la recrue : révèle la planque M7 de la casse Nova Auto.",1],
@@ -223,10 +220,11 @@ const P = [
  ["activite","Scan WAiNK : utilitaires",446,734,0,"collectibles-vue","Port Gellhorn.",1],
  ["activite","Scan WAiNK : voitures courantes",830,1672,0,"collectibles-vue","Key Lento.",1],
 ];
+P.push(...require("./argent.js"));
 const grid = (x,y) => "ABCDEFGHIJKLM"[Math.max(0,Math.min(12,Math.round((y-107)/151.8)))] + (Math.max(0,Math.min(8,Math.floor((x-47)/151.8)))+1);
 const out = [
   ...lieux.map((p,i) => ({id:"l"+i, t:"lieu", n:p.n, k:p.k, x:Math.round(p.x*S), y:Math.round(p.y*S), g:grid(p.x,p.y)})),
-  ...P.map(([t,n,x,y,ch,f,d,a],i) => ({id:"p"+i, t, n, x:Math.round(x*S), y:Math.round(y*S), g:grid(x,y), ch, f, d, a:a?1:0}))
+  ...P.map(([t,n,x,y,ch,f,d,a,v,li],i) => Object.assign({id:"p"+i, t, n, x:Math.round(x*S), y:Math.round(y*S), g:grid(x,y), ch, f, d, a:a?1:0}, v?{v}:{}, li?{li}:{}))
 ];
 const kb = require("../app/kb.json"); for(const p of out) if(p.f && !kb.find(k=>k.id===p.f)) throw new Error("fiche inconnue "+p.f);
 require("fs").writeFileSync(__dirname+"/../app/pois.json", "[\n"+out.map(o=>JSON.stringify(o)).join(",\n")+"\n]\n");

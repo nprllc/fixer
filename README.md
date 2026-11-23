@@ -23,6 +23,7 @@ Publié comme artifact claude.ai : https://claude.ai/artifact/To7um7NfK1wfhcmh5u
 
 ## Carte de Leonida
 
-Onglet Carte : le poster officiel Rockstar « The Great State of Leonida », affiché depuis le site de Rockstar (l'image n'est pas copiée dans ce dépôt). On peut glisser, zoomer au pincement, chercher et filtrer, et la carte respecte l'anti-spoiler.
-- `app/pois.json` : 135 lieux relevés sur le poster et 73 points de la base. `a:1` marque un emplacement approximatif (zone seulement), `g` donne la case du quadrillage du poster.
-- `tools/build-pois.js` régénère `pois.json`, `tools/map.js`, `map.css` et `patch-map.js` ont servi à intégrer l'onglet.
+Onglet Carte : le poster officiel Rockstar « The Great State of Leonida », affiché depuis le site de Rockstar (l image n est pas copiée dans ce dépôt). Glisser, zoom fluide, recherche, calques façon appli de cartes, case « Fait » synchronisée avec la progression, anti-spoiler pour les quêtes et secrets.
+
+- Priorité à l argent : planques à cash, 40 opérations de gangs, banques (petites agences et 8 grands coffres), bijouteries et prêteurs, receleurs, avec le gain annoncé.
+- `app/pois.json` est généré par `tools/build-pois.js` (lieux relevés sur le poster) et `tools/argent.js` (points argent). Sources : guides texte recoupés et réécrits ; `a:1` = emplacement approximatif (secteur décrit), `g` = case du quadrillage, `v` = gain, `li` = détail d un point groupé.
