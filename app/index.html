@@ -29,7 +29,7 @@ button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-vis
 header{flex:none;display:flex;align-items:center;gap:10px;padding:10px var(--gut-r) 9px var(--gut-l);border-bottom:1px solid var(--line)}
 .logo{font-family:var(--display);font-size:29px;letter-spacing:1px;line-height:1;
   background:linear-gradient(90deg,var(--pink),var(--sun));-webkit-background-clip:text;background-clip:text;color:transparent}
-.sub{font-size:10.5px;color:var(--mut);letter-spacing:.09em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:46vw}
+.sub{font-size:10.5px;color:var(--mut);letter-spacing:.09em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:72vw}
 .hright{margin-left:auto;display:flex;gap:6px;align-items:center}
 select{background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:7px 8px;font:inherit;font-size:13px}
 .iconbtn{background:var(--panel2);border:1px solid var(--line);border-radius:10px;width:36px;height:34px;display:grid;place-items:center;font-size:16px;color:var(--mut)}
@@ -233,6 +233,11 @@ nav button.sel{color:var(--pink)}
 .lpresets button{height:34px;padding:0 12px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);color:var(--txt);font-size:12.5px;font-weight:600}
 .leaflet-control-attribution{background:rgba(18,13,26,.75)!important;color:var(--mut)!important;font-size:10px;border-radius:6px 0 0 0}
 .leaflet-control-attribution a{color:var(--mut)!important}
+.mk.hl{transform:scale(1.25);border-color:#fff;z-index:3}
+.mk.hl::after{content:"";position:absolute;inset:-9px;border-radius:50%;border:3px solid #fff;animation:ring 1.6s ease-out infinite;pointer-events:none}
+@keyframes ring{0%{transform:scale(.6);opacity:1}100%{transform:scale(1.6);opacity:0}}
+.mapbtn{display:inline-flex;align-items:center;gap:6px;margin-top:10px;height:34px;padding:0 13px;border-radius:10px;border:1px solid var(--cyan);background:rgba(62,230,224,.1);color:var(--cyan);font-size:13px;font-weight:600}
+.mapbtn svg{width:15px;height:15px}
 </style>
 
 <header>
@@ -241,13 +246,6 @@ nav button.sel{color:var(--pink)}
     <div class="sub" id="where">Copilote GTA VI</div>
   </div>
   <div class="hright">
-    <select id="chap" aria-label="Chapitre en cours">
-      <option value="1">Chap. 1</option><option value="2">Chap. 2</option><option value="3">Chap. 3</option>
-      <option value="4">Chap. 4</option><option value="5">Chap. 5</option><option value="6">Fini</option>
-    </select>
-    <select id="perso" aria-label="Personnage joué">
-      <option value="Jason">Jason</option><option value="Lucia">Lucia</option>
-    </select>
     <button class="iconbtn" id="openSet" aria-label="Réglages" title="Réglages">⚙</button>
   </div>
 </header>
@@ -255,25 +253,13 @@ nav button.sel{color:var(--pink)}
 <main>
   <section class="view" id="v-chat">
     <div class="scroll" id="chatScroll"><div id="chat"></div></div>
-    <div id="chips"></div>
     <form id="f">
-      <textarea id="q" rows="1" placeholder="Un PNJ, un lieu, un choix… raconte"></textarea>
+      <textarea id="q" rows="1" placeholder="Demande au Fixer…"></textarea>
       <button type="button" class="btn" id="mic" aria-label="Dicter" hidden>🎙</button>
       <button type="submit" class="btn" id="send" aria-label="Envoyer">➤</button>
     </form>
   </section>
 
-  <section class="view" id="v-prog" hidden>
-    <div class="scroll" id="progScroll"></div>
-  </section>
-
-  <section class="view" id="v-guide" hidden>
-    <div class="scroll">
-      <div class="search"><input id="gq" type="search" placeholder="Chercher : Kenton, OVNI, flamants…" aria-label="Chercher dans le guide"></div>
-      <div id="cats"></div>
-      <div id="cards"></div>
-    </div>
-  </section>
   <section class="view" id="v-map" hidden>
     <div id="lmap" role="application" aria-label="Carte de Leonida"></div>
     <div class="mtop">
@@ -294,14 +280,17 @@ nav button.sel{color:var(--pink)}
 
 <nav>
   <button type="button" data-v="chat" class="sel"><span class="ic">Fixer</span>Chat</button>
-  <button type="button" data-v="prog"><span class="ic">Où j'en suis</span>Missions</button>
-  <button type="button" data-v="guide"><span class="ic">Guide</span>Fiches</button>
   <button type="button" data-v="map"><span class="ic">Carte</span>Leonida</button>
 </nav>
 
 <div id="sheet" hidden>
   <div class="in" role="dialog" aria-label="Réglages">
     <div class="h2">Réglages</div>
+    <div class="set"><label>Où j'en suis<small>Le Fixer le met à jour tout seul quand tu lui dis où tu en es. Ici, c'est pour corriger à la main.</small></label>
+      <div style="display:flex;gap:6px">
+        <select id="chap" aria-label="Chapitre en cours"><option value="1">Chap. 1</option><option value="2">Chap. 2</option><option value="3">Chap. 3</option><option value="4">Chap. 4</option><option value="5">Chap. 5</option><option value="6">Fini</option></select>
+        <select id="perso" aria-label="Personnage joué"><option value="Jason">Jason</option><option value="Lucia">Lucia</option></select>
+      </div></div>
     <div class="set"><label>Cerveau<small>Rapide : réponse en quelques secondes. Réfléchi : plus fiable, plus lent.</small></label>
       <div class="seg" id="tier"><button type="button" data-t="quick">Rapide</button><button type="button" data-t="default">Réfléchi</button></div></div>
     <div class="set" id="ttsRow" hidden><label>Lire les réponses à voix haute<small>Disponible dans un navigateur Chromium ou l'app de bureau.</small></label>
@@ -366,18 +355,18 @@ function save(){
   if(!docRef) return;
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
-    const {done,checks,cur,chap,perso,tier,autoTts,updatedAt} = P;
-    docRef.set({done,checks,cur,chap,perso,tier,autoTts,updatedAt}).then(()=>{ syncNote = "Progression synchronisée sur ton compte Claude."; if(view==="prog") renderProg(); })
+    const {done,checks,found,cur,chap,perso,tier,autoTts,updatedAt} = P;
+    docRef.set({done,checks,found:found||[],cur,chap,perso,tier,autoTts,updatedAt}).then(()=>{ syncNote = "Progression synchronisée sur ton compte Claude."; })
       .catch(()=>{ syncNote = "Synchro indisponible, progression gardée sur cet appareil."; });
   }, 700);
 }
 function applyHeader(){
   chapEl.value = P.chap; persoEl.value = P.perso;
   const m = MISSIONS.find(x => x.id===P.cur);
-  $("#where").textContent = m ? `Ch.${m.ch} · ${m.nom}` : (P.chap==="6" ? "Histoire terminée" : `Ch.${P.chap} · ${CH_NAMES[P.chap]||""}`);
+  $("#where").textContent = (P.chap==="6" ? "Histoire terminée" : m ? `Ch.${m.ch} · ${m.nom}` : `Ch.${P.chap} · ${CH_NAMES[P.chap]||""}`) + ` · ${P.perso}`;
 }
 chapEl.onchange = () => { P.chap = chapEl.value; save(); applyHeader(); refreshViews(); };
-persoEl.onchange = () => { P.perso = persoEl.value; save(); };
+persoEl.onchange = () => { P.perso = persoEl.value; save(); applyHeader(); };
 
 /* ---------- recherche ---------- */
 const norm = s => (s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9' ]/g," ").replace(/'/g," ");
@@ -470,6 +459,39 @@ function progressText(){
   return s;
 }
 
+function findMission(q){
+  const n = norm(q).trim(); if(!n) return null;
+  const byId = MISSIONS.find(m => m.id===q.trim()); if(byId) return byId;
+  const exact = MISSIONS.find(m => norm(m.nom).trim()===n); if(exact) return exact;
+  const inc = MISSIONS.find(m => norm(m.nom).includes(n) || n.includes(norm(m.nom).trim())); if(inc) return inc;
+  const w = n.split(/\s+/).filter(x => x.length > 2);
+  let best = null, bs = 0;
+  for(const m of MISSIONS){ const mn = norm(m.nom); const s = w.filter(x => mn.includes(x)).length / Math.max(w.length,1); if(s > bs){ bs = s; best = m; } }
+  return bs >= .5 ? best : null;
+}
+function progUpdate(a){
+  const notes = [];
+  if(a.perso){ P.perso = a.perso; notes.push("perso : " + a.perso); }
+  if(a.mission){
+    const m = findMission(a.mission);
+    if(!m) notes.push("mission « " + a.mission + " » introuvable dans la liste");
+    else if(a.etat==="terminee"){ const i = idx(m.id); const nx = MISSIONS[i+1]; if(nx) setHere(nx.id); else { P.done = MISSIONS.map(x => x.id); P.cur = null; P.chap = "6"; } notes.push("terminée : " + m.nom); }
+    else { setHere(m.id); notes.push("en cours : " + m.nom); }
+  }
+  if(a.chapitre && !a.mission){ P.chap = String(a.chapitre); const first = MISSIONS.find(x => x.ch===+a.chapitre); if(first && idx(P.cur||"") < idx(first.id)) { P.done = MISSIONS.slice(0, idx(first.id)).map(x => x.id); P.cur = null; } notes.push("chapitre : " + P.chap); }
+  if(a.ratable_fait){
+    const n = norm(a.ratable_fait); const c = CHECKS.find(x => norm(x.t + " " + x.d).includes(n) || n.split(/\s+/).filter(w => w.length > 3).some(w => norm(x.t).includes(w)));
+    if(c){ P.checks = [...new Set([...P.checks, c.id])]; notes.push("ratable fait : " + c.t); } else notes.push("ratable « " + a.ratable_fait + " » pas reconnu");
+  }
+  if(a.point_fait){
+    const p = mapSearch(a.point_fait)[0];
+    if(p){ P.found = [...new Set([...(P.found||[]), p.id])]; notes.push("point fait : " + p.n); } else notes.push("point « " + a.point_fait + " » pas trouvé sur la carte");
+  }
+  save(); applyHeader(); refreshViews();
+  const n = nextMission();
+  return {fait: notes, chapitre: P.chap, perso: P.perso, prochaine_mission: P.chap==="6" ? null : (n ? n.nom : null), ratables_a_surveiller: pendingChecks().map(c => c.t)};
+}
+
 /* ---------- rendu texte ---------- */
 function esc(s){ return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 function inline(s){
@@ -500,8 +522,14 @@ function bubble(role, text){
   chatEl.appendChild(d); scrollChat();
   return d;
 }
-function setBot(d, text, final){
+function setBot(d, text, final, mapIds){
   d.innerHTML = md(text);
+  if(final && mapIds && mapIds.length){
+    const b = document.createElement("button"); b.type = "button"; b.className = "mapbtn";
+    b.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11z" fill="currentColor"/><circle cx="12" cy="10" r="2.4" fill="#0d0a14"/></svg>' + (mapIds.length > 1 ? "Voir les " + mapIds.length + " points sur la carte" : "Voir sur la carte");
+    b.onclick = () => showOnMap(mapIds);
+    d.appendChild(b);
+  }
   if(final && tts && text){
     const t = document.createElement("div"); t.className = "tools";
     const b = document.createElement("button"); b.type = "button"; b.className = "mini"; b.textContent = "▶ Écouter";
@@ -511,37 +539,8 @@ function setBot(d, text, final){
 }
 function welcome(){
   chatEl.innerHTML = "";
-  if(history.length){ history.forEach(m => { const b = bubble(m.role, m.content); if(m.role!=="user") setBot(b, m.content, true); }); return; }
-  const n = nextMission();
-  const w = document.createElement("div");
-  w.className = "welcome";
-  w.innerHTML = '<div class="big">Dis-moi ce qui se passe.</div>Un PNJ te parle, tu cherches un lieu, tu hésites sur un choix : je te dis quoi faire, sans spoiler au-delà de ta progression.';
-  const st = document.createElement("div"); st.className = "status";
-  st.innerHTML = (P.cur || P.done.length) && n
-    ? `Prochaine mission : <b>${esc(n.nom)}</b> (ch.${n.ch})${PNR.has(n.id) ? ' · <b style="color:var(--bad)">point de non-retour</b>' : ""}. ${pendingChecks().length ? pendingChecks().length + " ratable(s) à vérifier dans « Où j'en suis »." : ""}`
-    : `Indique ta mission dans <b>Où j'en suis</b> : je saurai quoi te conseiller et ce que tu risques de rater.`;
-  w.appendChild(st);
-  chatEl.appendChild(w);
+  history.forEach(m => { const b = bubble(m.role, m.content); if(m.role!=="user") setBot(b, m.content, true, m.map); });
 }
-function chips(){
-  const n = nextMission(), pc = pendingChecks();
-  const list = [
-    ["Quoi faire maintenant ?"],
-    ["Un PNJ vient de me parler…"],
-    pc.length ? ["Qu'est-ce que je risque de rater ?", "hot"] : ["Qu'est-ce que je risque de rater ?"],
-    n ? [`Des choix dans « ${n.nom} » ?`] : ["Ce choix change quoi ?"],
-    ["Comment me faire de l'argent ?"],
-    ["Que faire autour de moi ? Je suis à…"],
-    ["Où sont les collectibles du coin ?"]
-  ];
-  $("#chips").innerHTML = list.map(([c,k]) => `<button class="chip ${k||""}" type="button">${esc(c)}</button>`).join("");
-}
-$("#chips").addEventListener("click", e => {
-  const b = e.target.closest(".chip"); if(!b) return;
-  const t = b.textContent;
-  if(t.endsWith("…")){ qEl.value = t.replace(/…$/, " "); autosize(); qEl.focus(); }
-  else ask(t);
-});
 
 function rules(){
   const ch = P.chap==="6" ? "histoire terminée (aucune restriction de spoiler)" : "chapitre " + P.chap + " (" + (CH_NAMES[P.chap]||"") + ")";
@@ -561,7 +560,9 @@ RÈGLES
 - Spoilers : une fiche au_dela_de_ta_progression=true ne doit pas être révélée. Dis seulement qu'il y a un enjeu plus tard et demande s'il veut savoir, sauf s'il l'a explicitement demandé.
 - Tiens compte du personnage : signale si une quête est réservée à Jason ou à Lucia.
 - Signale clairement ce qui est ratable ou limité dans le temps. Garde les nuances « à confirmer » / « non confirmé ».
-- Lieux : appelle l'outil carte et donne la case du quadrillage (ex. « case K6 ») ; Nico peut l'ouvrir dans l'onglet Carte. Précise quand l'emplacement est approximatif.
+- Progression : Nico ne coche rien lui-même, c'est toi qui tiens son carnet. Dès qu'il dit où il en est (« je viens de finir X », « je suis à la mission Y », « je suis au chapitre 3 », « je joue Lucia », « j'ai fait Shirley », « j'ai vidé la planque de… »), appelle mettre_a_jour_progression AVANT de répondre, puis réponds en tenant compte du nouvel état. Si sa progression est inconnue et que la question en dépend, demande-lui en une phrase quelle mission il joue.
+- Lieux : appelle l'outil carte et donne la case du quadrillage (ex. « case K6 »). Précise quand l'emplacement est approximatif.
+- Carte : quand Nico dit « montre-moi », « sur la carte », « c'est où », « comment j'y vais », ou qu'un lieu précis l'aide à agir, appelle montrer_sur_carte : le ou les points s'allument sur sa carte. Dis en une ligne ce qui est allumé (nom + case). Plusieurs points possibles (ex. toutes les banques braquables) : passe leurs noms exacts ou une recherche.
 - Mets en **gras** les noms de missions et de lieux importants. Listes courtes avec « - » si utile, pas de tableaux, pas de titres.
 
 FICHES DISPONIBLES
@@ -578,6 +579,32 @@ const tools = [
   { name:"carte", description:"Cherche un lieu ou un point d'intérêt (cash, planques de gangs, banques, bijouteries, receleurs, quêtes, secrets…) sur la carte officielle de Leonida (poster Rockstar quadrillé A–M / 1–9). Renvoie le nom, la case du quadrillage, le type, le chapitre et si l'emplacement est approximatif. Utilise-le dès que Nico demande où se trouve quelque chose.",
     inputSchema:{type:"object",properties:{lieu:{type:"string",description:"nom du lieu ou de la chose cherchée"}},required:["lieu"]},
     execute: ({lieu}) => { const r = mapSearch(lieu).slice(0,8).map(p => ({nom:p.n, case:p.g, type:TYPES[p.t].n, chapitre:p.ch||"tous", approximatif:!!p.a, valeur:p.v||null, detail:p.d||null, liste:p.li||null, fait:(P.found||[]).includes(p.id), au_dela_de_ta_progression:(p.ch||0) > prog(), fiche:p.f||null})); return r.length ? r : {resultat:"pas sur la carte du Fixer"}; } },
+  { name:"mettre_a_jour_progression", description:"Met à jour le carnet de progression de Nico (gardé en arrière-plan, jamais affiché). À appeler dès qu'il dit où il en est. Tous les champs sont optionnels.",
+    inputSchema:{type:"object",properties:{
+      mission:{type:"string",description:"nom (anglais) ou id d'une mission principale, ex. « Tourist Trap » ou m1-20"},
+      etat:{type:"string",enum:["en_cours","terminee"],description:"en_cours : il joue cette mission ; terminee : il vient de la finir"},
+      chapitre:{type:"integer",minimum:1,maximum:6,description:"6 = histoire finie"},
+      perso:{type:"string",enum:["Jason","Lucia"]},
+      ratable_fait:{type:"string",description:"intitulé d'un ratable ou rappel qu'il a fait (ex. Shirley, magazines, épargne)"},
+      point_fait:{type:"string",description:"nom d'un point de la carte qu'il a fait ou vidé (planque, coffre, braquage…)"}
+    }},
+    execute: (a) => progUpdate(a) },
+  { name:"montrer_sur_carte", description:"Allume un ou plusieurs points sur la carte de Nico (surbrillance + zoom) pour qu'il sache où aller. Utilise les noms exacts renvoyés par l'outil carte, ou une recherche (ex. « banque Ocean Beach », « receleur drogue »).",
+    inputSchema:{type:"object",properties:{
+      points:{type:"array",items:{type:"string"},description:"noms exacts ou recherches, 1 à 8"},
+      inclure_plus_tard:{type:"boolean",description:"true seulement si Nico a demandé à voir au-delà de son chapitre"}
+    },required:["points"]},
+    execute: ({points, inclure_plus_tard}) => {
+      const ids = [];
+      for(const q of (points||[]).slice(0,8)){
+        const r = mapSearch(q).filter(p => inclure_plus_tard || (p.ch||0) <= prog());
+        const exact = r.find(p => norm(p.n)===norm(q)) || r[0];
+        if(exact && !ids.includes(exact.id)) ids.push(exact.id);
+      }
+      if(!ids.length) return {resultat:"aucun point trouvé sur la carte pour ça"};
+      pendingMap = ids;
+      return {allumes: ids.map(id => { const p = POIS.find(x => x.id===id); return {nom:p.n, case:p.g, approximatif:!!p.a}; })};
+    } },
   { name:"missions_du_chapitre", description:"Liste ordonnée des missions principales d'un chapitre avec leur objectif résumé, et lesquelles Nico a déjà cochées.",
     inputSchema:{type:"object",properties:{chapitre:{type:"integer",minimum:1,maximum:5}},required:["chapitre"]},
     execute: ({chapitre}) => {
@@ -591,7 +618,7 @@ function localAnswer(q){
   const r = search(q,2);
   if(!r.length) return "Rien dans ma base là-dessus pour l'instant. Regarde la carte : [GTABase](https://www.gtabase.com/gta-6/map) ou [Map Genie](https://mapgenie.io/grand-theft-auto-6/maps/leonida).";
   return "_Mode hors-ligne (Claude n'est pas autorisé sur cette page) : voici les fiches les plus proches._\n" +
-    r.map(f => `**${f.titre}**\n` + (f.au_dela_de_ta_progression ? "Plus loin dans l'histoire, je garde ça pour plus tard (onglet Guide pour l'afficher)." : f.texte)).join("\n");
+    r.map(f => `**${f.titre}**\n` + (f.au_dela_de_ta_progression ? "Plus loin dans l'histoire, je garde ça pour plus tard." : f.texte)).join("\n");
 }
 
 function setBusy(b){
@@ -613,9 +640,10 @@ async function ask(text){
   const out = bubble("assistant", "");
   out.classList.add("thinking"); out.textContent = "Le Fixer réfléchit";
   let answer = "", isErr = false;
+  pendingMap = null;
   try{
     if(!sample) throw {code:"local"};
-    const msgs = history.slice(-12);
+    const msgs = history.slice(-12).map(m => ({role:m.role, content:m.content}));
     while(msgs.length && msgs[0].role!=="user") msgs.shift();
     const input = [{role:"user", content: rules()}, {role:"assistant", content:"Compris. J'écoute."}, ...msgs];
     ctl = new AbortController();
@@ -637,12 +665,14 @@ async function ask(text){
   out.classList.remove("thinking");
   out.classList.toggle("err", isErr);
   answer = answer.replace(/(^|\n)_([^_\n]+)_(?=\n|$)/g, "$1$2");
-  setBot(out, answer, !isErr);
-  if(isErr){ history.pop(); } else { history.push({role:"assistant", content:answer}); }
+  const shown = !isErr && pendingMap ? pendingMap : null;
+  setBot(out, answer, !isErr, shown);
+  if(isErr){ history.pop(); } else { history.push(shown ? {role:"assistant", content:answer, map:shown} : {role:"assistant", content:answer}); }
   store.set("history", history.slice(-40));
   setBusy(false);
   scrollChat();
   if(!isErr && P.autoTts && tts) speak(answer);
+  if(shown) setTimeout(() => showOnMap(shown), 900);
 }
 
 /* ---------- voix ---------- */
@@ -671,91 +701,6 @@ mic.addEventListener("click", () => {
   if(listening){ dict.stop().catch(()=>{}); return; }
   base = qEl.value ? qEl.value.trimEnd() + " " : "";
   dict.start().catch(err => { if(err && err.code==="not_granted"){ mic.hidden = true; } });
-});
-
-/* ---------- vue progression ---------- */
-function renderProg(){
-  const el = $("#progScroll"), d = doneSet(), c = new Set(P.checks), ch = prog();
-  const total = MISSIONS.length, nd = P.done.length, n = nextMission();
-  const pc = pendingChecks();
-  let h = `<div class="h2">Où j'en suis</div>
-    <p class="hint">Tape « J'en suis là » sur la mission que tu joues : tout ce qui précède est coché et le Fixer adapte ses conseils et ses spoilers.</p>
-    <div class="cnt">${nd} / ${total} missions principales${n ? " · prochaine : " + esc(n.nom) : ""}</div>
-    <div class="bar"><i style="width:${total ? Math.round(nd/total*100) : 0}%"></i></div>`;
-  if(pc.length){
-    h += `<div class="alert"><b>À ne pas rater</b><ul>${pc.map(x => `<li>${esc(x.t)}${x.before ? ` <span style="color:var(--mut)">avant ${esc((MISSIONS.find(m=>m.id===x.before)||{}).nom||"")}</span>` : ""}</li>`).join("")}</ul></div>`;
-  }
-  for(let k=1;k<=5;k++){
-    const ms = MISSIONS.filter(m => m.ch===k);
-    const dk = ms.filter(m => d.has(m.id)).length;
-    const locked = k > ch && dk===0 && !(n && n.ch===k);
-    const open = n ? n.ch===k : k===5;
-    const cks = CHECKS.filter(x => x.ch===k);
-    h += `<details class="ch" ${open?"open":""}><summary><span class="chn">${k}</span><span class="cht">${locked ? "Chapitre " + k : esc(CH_NAMES[k])}<small>${locked ? "Pas encore atteint, titres masqués" : ms.length + " missions"}</small></span><span class="cnt">${dk}/${ms.length}</span></summary>`;
-    for(const m of ms){
-      const cur = n && n.id===m.id;
-      h += `<div class="mrow ${d.has(m.id)?"done":""} ${cur?"cur":""} ${PNR.has(m.id)&&!locked?"pnr":""}">
-        <button type="button" class="box ${d.has(m.id)?"on":""}" data-done="${m.id}" aria-label="Mission ${esc(locked?m.n:m.nom)} terminée">${d.has(m.id)?"✓":""}</button>
-        <span class="mnum">${m.n}</span><span class="mname">${locked ? "•••••••" : esc(m.nom)}</span>
-        <button type="button" class="here" data-here="${m.id}">${cur ? "En cours" : "J'en suis là"}</button></div>`;
-    }
-    if(cks.length && !locked){
-      h += `<div class="mrow" style="color:var(--sun);font-size:12px;text-transform:uppercase;letter-spacing:.06em">Ratables et rappels</div>`;
-      for(const x of cks){
-        const gone = checkGone(x) && !c.has(x.id);
-        h += `<div class="crow"><button type="button" class="box ${c.has(x.id)?"on":""}" data-check="${x.id}" aria-label="${esc(x.t)} fait">${c.has(x.id)?"✓":""}</button>
-          <span class="mname" style="${gone?"color:var(--mut);text-decoration:line-through":""}">${esc(x.t)}<small>${gone ? "Plus disponible" : esc(x.d)}</small></span></div>`;
-      }
-    }
-    h += `</details>`;
-  }
-  h += `<div class="sync">${esc(syncNote)}</div>`;
-  const st = el.scrollTop; el.innerHTML = h; el.scrollTop = st;
-}
-$("#progScroll").addEventListener("click", e => {
-  const b = e.target.closest("button"); if(!b) return;
-  if(b.dataset.here) setHere(b.dataset.here);
-  else if(b.dataset.done) toggleDone(b.dataset.done);
-  else if(b.dataset.check){
-    const c = new Set(P.checks); c.has(b.dataset.check) ? c.delete(b.dataset.check) : c.add(b.dataset.check);
-    P.checks = [...c]; save(); refreshViews();
-  }
-});
-
-/* ---------- vue guide ---------- */
-let gCat = "Tout", revealed = new Set(), gLater = false;
-function renderCats(){
-  const cats = ["Tout", ...new Set(KB.map(f => f.cat))];
-  $("#cats").innerHTML = cats.map(c => `<button type="button" class="chip ${c===gCat?"sel":""}" data-cat="${esc(c)}">${esc(c)}</button>`).join("");
-}
-function renderCards(){
-  const q = $("#gq").value.trim();
-  let list = q ? score(q).map(r => r.f) : KB.slice();
-  if(gCat !== "Tout") list = list.filter(f => f.cat===gCat);
-  const nLater = list.filter(f => f.chap > prog()).length;
-  if(!gLater) list = list.filter(f => !(f.chap > prog()));
-  const foot = nLater ? `<button type="button" class="mini" data-glater style="margin:4px 0 14px">${gLater ? "Masquer les fiches des chapitres suivants" : nLater + " fiche" + (nLater>1?"s":"") + " des chapitres suivants masquée" + (nLater>1?"s":"") + " · afficher"}</button>` : "";
-  if(!list.length){ $("#cards").innerHTML = `<div class="empty">Rien pour ton chapitre ici. Essaie un autre mot, ou demande au Fixer.</div>` + foot; return; }
-  $("#cards").innerHTML = list.map(f => {
-    const lock = f.chap > prog() && !revealed.has(f.id);
-    return `<article class="card ${lock?"lock":""}">
-      <div class="meta">${esc(f.cat)} · ${f.chap ? "ch." + f.chap : "tout le jeu"}</div>
-      <h3>${lock ? "Fiche du chapitre " + f.chap : esc(f.titre)}</h3>
-      <div class="tx">${esc(f.texte)}</div>
-      ${lock ? `<p class="spoil">Spoiler : tu n'es pas encore au chapitre ${f.chap}.</p>` : ""}
-      <div class="acts">
-        ${lock ? `<button type="button" class="mini" data-reveal="${f.id}">Afficher quand même</button>`
-               : `<button type="button" class="mini" data-ask="${f.id}">Demander au Fixer</button>` + MAPS.map(([n,u]) => `<a class="mini" href="${u}" target="_blank" rel="noopener">Carte ${n}</a>`).join("")}
-      </div></article>`;
-  }).join("") + foot;
-}
-$("#cats").addEventListener("click", e => { const b = e.target.closest("[data-cat]"); if(!b) return; gCat = b.dataset.cat; renderCats(); renderCards(); });
-$("#gq").addEventListener("input", renderCards);
-$("#cards").addEventListener("click", e => {
-  const b = e.target.closest("button"); if(!b) return;
-  if(b.dataset.reveal){ revealed.add(b.dataset.reveal); renderCards(); }
-  if("glater" in b.dataset){ gLater = !gLater; renderCards(); }
-  if(b.dataset.ask){ const f = KB.find(k => k.id===b.dataset.ask); show("chat"); ask(`Résume-moi l'essentiel de « ${f.titre} » pour ma partie.`); }
 });
 
 /* ---------- carte ---------- */
@@ -795,6 +740,7 @@ const TYPES = {
 };
 const MONEY = ["cash","gang","banque","bijou","receleur"];
 const GROUPS = [["Argent", MONEY], ["Histoire et quêtes", ["quete","mission","rencontre"]], ["Exploration", ["secret","meditation","activite","lieu"]]];
+let pendingMap = null, hlIds = [], hlLayer = null, hlWaiting = null;
 let lmap = null, fitZoom = -3, selId = null, mapRevealed = new Set(), markers = new Map(), groups = {};
 let mOn = new Set(MONEY), hideDone = false, showLater = false;
 try{ const s = store.get("mfilters", null); if(Array.isArray(s)) mOn = new Set(s); hideDone = !!store.get("mhidedone", false); showLater = !!store.get("mlater", false); }catch(e){}
@@ -901,7 +847,6 @@ function select(p, fly){
     <div class="pacts">
       <button type="button" class="${dn?"ok":""}" data-mdone="${p.id}" aria-pressed="${dn}">${dn ? "✓ Fait" : "Marquer fait"}</button>
       <button type="button" class="pri" data-mask="${p.id}">Demander au Fixer</button>
-      ${fiche ? `<button type="button" data-mfiche="${fiche.id}">Fiche</button>` : ""}
       <a href="${MAPS[0][1]}" target="_blank" rel="noopener">GTABase ↗</a>
     </div>`;
   $("#mcard").innerHTML = head + body;
@@ -942,8 +887,9 @@ function initMap(){
   const tier = () => { const z = lmap.getZoom() - fitZoom, el = $("#lmap"); el.classList.toggle("z1", z < .7); el.classList.toggle("z2", z >= .7 && z < 1.5); };
   lmap.on("zoomend", tier);
   fit(); requestAnimationFrame(fit);
-  lmap.on("click", () => { $("#mres").hidden = true; if(!$("#mlayers").hidden) $("#mlayers").hidden = true; else if(selId) unselect(); });
+  lmap.on("click", () => { $("#mres").hidden = true; if(!$("#mlayers").hidden) $("#mlayers").hidden = true; else if(selId) unselect(); else if(hlIds.length) clearHighlight(); });
   buildMarkers();
+  if(hlWaiting) requestAnimationFrame(applyHighlight);
 }
 
 $("#mquick").addEventListener("click", e => {
@@ -981,23 +927,39 @@ $("#mcard").addEventListener("click", e => {
   if(b.dataset.mreveal){ mapRevealed.add(b.dataset.mreveal); select(POIS.find(x => x.id===b.dataset.mreveal)); }
   if(b.dataset.mdone){ const s = new Set(P.found||[]); s.has(b.dataset.mdone) ? s.delete(b.dataset.mdone) : s.add(b.dataset.mdone); P.found = [...s]; save(); select(POIS.find(x => x.id===b.dataset.mdone)); }
   if(b.dataset.mask){ const p = POIS.find(x => x.id===b.dataset.mask); show("chat"); ask(`Je regarde la carte, case ${p.g} : « ${p.n} ». Qu'est-ce que je dois savoir et comment je m'y prends ?`); }
-  if(b.dataset.mfiche){ const f = KB.find(k => k.id===b.dataset.mfiche); gCat = "Tout"; $("#gq").value = f.titre; show("guide"); }
 });
+function showOnMap(ids){
+  hlWaiting = ids; show("map");
+  if(lmap) applyHighlight();
+}
+function applyHighlight(){
+  const ids = (hlWaiting || []).filter(id => POIS.some(p => p.id===id)); hlWaiting = null;
+  if(!ids.length) return;
+  hlIds = ids;
+  if(!hlLayer) hlLayer = L.layerGroup().addTo(lmap); else hlLayer.clearLayers();
+  const pts = ids.map(id => POIS.find(p => p.id===id));
+  for(const p of pts){
+    const ic = iconFor(p); ic.options.html = ic.options.html.replace('class="mk', 'class="mk hl');
+    L.marker(ll(p), {icon:ic, zIndexOffset:3000}).on("click", e => { L.DomEvent.stopPropagation(e); select(p); }).addTo(hlLayer);
+  }
+  if(pts.length===1) select(pts[0], true);
+  else { if(selId) unselect(); requestAnimationFrame(() => lmap.flyToBounds(L.latLngBounds(pts.map(ll)), {padding:[70,70], maxZoom:fitZoom + 2, duration:.8})); }
+}
+function clearHighlight(){ hlIds = []; if(hlLayer) hlLayer.clearLayers(); }
 function drawPins(){ if(!lmap) return; for(const p of POIS) refreshMarker(p.id); applyLayers(); }
 
 /* ---------- navigation et réglages ---------- */
 let view = "chat";
 function show(v){
   view = v;
-  ["chat","prog","guide","map"].forEach(k => { $("#v-"+k).hidden = k!==v; });
+  if(v!=="map") v = "chat"; view = v;
+  ["chat","map"].forEach(k => { $("#v-"+k).hidden = k!==v; });
   document.querySelectorAll("nav button").forEach(b => b.classList.toggle("sel", b.dataset.v===v));
-  if(v==="prog") renderProg();
-  if(v==="guide"){ renderCats(); renderCards(); }
   if(v==="map") openMap();
   store.set("view", v);
 }
 document.querySelector("nav").addEventListener("click", e => { const b = e.target.closest("button"); if(b) show(b.dataset.v); });
-function refreshViews(){ chips(); if(!history.length) welcome(); if(view==="prog") renderProg(); if(view==="guide") renderCards(); if(lmap) drawPins(); }
+function refreshViews(){ if(lmap) drawPins(); }
 
 function renderSet(){
   document.querySelectorAll("#tier button").forEach(b => b.classList.toggle("sel", b.dataset.t===P.tier));
@@ -1022,10 +984,10 @@ Promise.all([
   fetch("pois.json").then(r => r.json()).catch(() => [])
 ]).then(([k, m, p]) => {
   KB = k; MISSIONS = m; POIS = p; buildIndex();
-  applyHeader(); chips(); welcome();
+  applyHeader(); welcome();
   show(store.get("view","chat"));
 });
-applyHeader(); chips(); welcome();
+applyHeader(); welcome();
 
 if(window.claude && claude.use){
   claude.use("sample").then(s => { if(s) sample = s; }).catch(()=>{});
@@ -1055,7 +1017,6 @@ if(window.claude && claude.use){
       if(remote && (remote.updatedAt||0) > (P.updatedAt||0)){ Object.assign(P, remote); store.set("p", P); applyHeader(); refreshViews(); }
       else if(P.updatedAt){ save(); }
       syncNote = "Progression synchronisée sur ton compte Claude.";
-      if(view==="prog") renderProg();
     }catch(e){ clearTimeout(timer); syncNote = "Synchro indisponible, progression gardée sur cet appareil."; docRef = null; }
   }).catch(()=>{});
 }
